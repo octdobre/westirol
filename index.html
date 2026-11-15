@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>West Tirol Ski Resorts</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="snow" aria-hidden="true"></div>
+    <svg class="peaks" viewBox="0 0 1200 120" preserveAspectRatio="none" aria-hidden="true">
+      <path class="peaks-back" d="M0 120 L0 80 L90 40 L170 85 L260 25 L350 90 L450 35 L540 80 L640 15 L740 85 L830 45 L920 90 L1010 30 L1100 75 L1200 40 L1200 120 Z"/>
+      <path class="peaks-front" d="M0 120 L0 100 L120 70 L220 105 L330 60 L430 100 L560 65 L680 108 L790 72 L900 104 L1020 68 L1120 100 L1200 80 L1200 120 Z"/>
+    </svg>
+    <div class="header-text">
+      <h1>West Tirol Ski Resorts</h1>
+      <p>Gondolas, chairlifts and T-bars across the valleys of western Tirol, Austria</p>
+    </div>
+  </header>
+
+  <main class="layout">
+    <aside class="sidebar">
+      <section class="panel">
+        <h2>Lift type</h2>
+        <div class="chips" id="type-chips" role="group" aria-label="Filter by lift type"></div>
+      </section>
+
+      <section class="panel">
+        <h2><label for="valley-select">Valley</label></h2>
+        <select id="valley-select"></select>
+      </section>
+
+      <section class="panel">
+        <h2><label for="home-input">Distance from home</label></h2>
+        <form id="home-form" class="home-form">
+          <input id="home-input" type="text" placeholder="e.g. Maria-Theresien-Straße 1, Innsbruck" autocomplete="street-address" required>
+          <button type="submit" id="home-submit">Calculate</button>
+          <button type="button" id="home-clear" class="ghost" hidden>Clear</button>
+        </form>
+        <p id="home-status" class="status" role="status" aria-live="polite"></p>
+      </section>
+
+      <section class="panel list-panel">
+        <div class="list-head">
+          <h2>Resorts</h2>
+          <span id="list-count" class="count"></span>
+        </div>
+        <ul id="resort-list" class="resort-list"></ul>
+      </section>
+    </aside>
+
+    <div id="map" class="map" aria-label="Map of ski resorts"></div>
+  </main>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="resorts.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,115 @@
+
+
+
+# Lechtal
+Familienskigebiet Stanzach - Stanzach 55a, 6642 Stanzach - 47.379558/10.559589 - JUST T-BAR LIFT
+Skilifte Knittel - Untergiblen 15 6652 Elbigenalp - 47.284697,10.425449 - JUST T-BAR LIFT
+
+# Tannheimer Tal
+Lifte Nesselwängle - Nesselwängle 92 6672 Nesselwängle - 47.486201,10.603185 - JUST CHAIRLIFT
+Bergbahnen Tannheimer Tal - Bergbahnweg 12, 6675 Tannheim - 47.499433,10.524924
+
+# Reutte
+Waldrast Lift - Krankenhausstraße 169, 6600 Ehenbichl - 47.471811,10.718662 - JUST T-BAR LIFT
+Schollenwiesenlift Höfen - Schiliftweg 5, 6604 Höfen - 47.470355,10.680779 - JUST T-BAR LIFT
+Bergwelt Hahnenkamm Reuttener Seilbahnen - Bergbahnstraße 18, 6604 Höfen - 47.478174,10.679516
+
+# Lermos - Reutte
+Skilift Grünberg Obsteig - Finsterfiecht 49 6416 Obsteig - 47.292788,10.915657 - JUST T-BAR LIFT
+Marienbergbahnen Biberwier - Marienbergweg 16 6633 Biberwier - 47.372787,10.888374
+Grubigsteinbahnen Lermoos - Juch 3 6631 Leermos - 47.401604,10.878825
+Ehrwalder Almbahn - Dr. Ludwig Ganghoferstraße 66 6632 Ehrwald - 47.388003,10.937855
+Wettersteinbahnen Ehrwald - Ebne 50 A-6632 Ehrwald - 47.407637,10.927955
+Tiroler Zugspitzbahn - Obermoos 1, 6632 Ehrwald- 47.426178,10.941905
+Bergbahnen Berwang/Bichlbach - Berwang 120, 6622 Berwang - 47.409334,10.752651
+
+# Seefeld
+Gschwandtkopflifte Seefeld - Gschwandtkopf 702 6100 Seefeld in Tirol -  47.325132,11.179345 - JUST CHAIRLIFT
+Birkenlift Seefeld - Leutascher Str. 634, 6100 Seefeld in Tirol - 47.337145,11.178903 - JUST T-BAR LIFT
+
+# Inntal
+Bungerlochlift Tarrenz - Schulgasse 30 6464 Tarrenz - 47.268106,10.755253 - JUST T-BAR LIFT
+Galtwiesenlift - 6471 Wald - 47.196318,10.784336  - JUST T-BAR LIFT
+Imster Bergbahnen -  Hoch-Imst 19 6460 Gemeinde Imst - 47.241140,10.723525
+Bergbahnen Venet - Hauptstraße 38 6511 Zams - 47.153783,10.585429
+Riefenlift Zams - Rifenalbahn Talstation, 6511 Zams - 47.164190,10.599803
+Skilift Tobadill - Schützen 6552 Tobadill - 47.123556,10.515708 - JUST T-BAR LIFT
+
+# Oetztal
+Bergbahnen Hochoetz - Angerweg 13 6433 Oetz - 47.1995152,10.9026463
+Balbach Wiesenlift - Ochsengarten 6433 Oetz - 47.227430,10.932330 - JUST T-BAR LIFT
+SKIlifte Niederthai - Am Tauferberg 6441 Umhausen - 47.1265733,10.961486 - JUST T-BAR LIFT
+Bergbahnen Sölden, Ötztaler Gletscher - Dorfstraße 115 6450 Sölden - 46.9598334,11.0068136
+Bergbahnen Obergurgl Hochgurgl - Gurglerstraße 49, 6456 Gurgl - 46.8982418,11.0401245
+Skigebiet Vent - Franz-Senn-Weg 21 6458 Vent - 46.860002,10.914751
+
+# Piztal
+Hochzeiger Bergbahnen - Liß 270 6474 Jerzens - 47.153117,10.756806
+Mandarfen Übungslift - Mandarfen 89, 6481 Plangeroß - 46.968410,10.870650 - JUST T-BAR LIFT
+Rifflsee Bergbahnen - Mandarfen 89 6481 Plangeroß - 46.968410,10.870650
+Pitztaler Gletscher - Mittelberg 103 6481 St. Leonhard im Pitztal - 46.958823,10.871508
+
+# Kaunertal
+Kaunertaler Gletscherbahnen - 46.886686,10.719824
+
+# Oberinntal
+Bergbahnen Fendels - Ried 302, 6531 Ried im Oberinntal - 47.057471,10.660558
+Bergbahnen Serfaus-fiss-ladis - L286 73, 6532 Ladis - 47.0697738,10.6463075
+Bergbahnen Nauders - Gewerbegebiet 1, 6543 Nauders - 46.874874,10.508305
+
+# Paznauntal
+Bergbahnen See - Silvretta Straße 178 6553 See - 47.08259,10.463563
+Ischgl SKi Resort - 6561 Ischgl - 47.011773,10.287720
+Bergbahnen Kappl - Au 483 6555 Kappl - 47.060830/10.375490
+Bergbahnen Galtür - Galtür 39 6563 Galtür - 46.965604,10.164282
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
