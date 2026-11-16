@@ -18,17 +18,20 @@
       <h1>West Tirol Ski Resorts</h1>
       <p>Gondolas, chairlifts and T-bars across the valleys of western Tirol, Austria</p>
     </div>
+    <div class="clock" id="clock" title="Current local time (Austria)"></div>
   </header>
 
   <main class="layout">
     <aside class="sidebar">
+      <section class="panel highlights" id="highlights" aria-label="Highlights"></section>
+
       <section class="panel">
         <h2>Lift type</h2>
         <div class="chips" id="type-chips" role="group" aria-label="Filter by lift type"></div>
-      </section>
-
-      <section class="panel">
-        <h2><label for="valley-select">Valley</label></h2>
+        <h2 class="gap">Season status</h2>
+        <div class="chips" id="status-chips" role="group" aria-label="Filter by season status"></div>
+        <button type="button" id="today-filter" class="switch-row" role="switch" aria-checked="false"></button>
+        <h2 class="gap"><label for="valley-select">Valley</label></h2>
         <select id="valley-select"></select>
       </section>
 
@@ -44,8 +47,12 @@
 
       <section class="panel list-panel">
         <div class="list-head">
-          <h2>Resorts</h2>
+          <h2><label for="search-input">Resorts</label></h2>
           <span id="list-count" class="count"></span>
+        </div>
+        <div class="search-wrap">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.800-3.800"/></svg>
+          <input id="search-input" type="search" placeholder="Search resorts by name…" autocomplete="off">
         </div>
         <ul id="resort-list" class="resort-list"></ul>
       </section>
@@ -53,6 +60,61 @@
 
     <div id="map" class="map" aria-label="Map of ski resorts"></div>
   </main>
+
+  <dialog id="welcome" class="welcome" aria-labelledby="welcome-title">
+    <div class="welcome-hero">
+      <svg id="welcome-scene" viewBox="0 0 660 250" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+        <defs>
+          <linearGradient id="w-sky" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#0a2a55"/>
+            <stop offset=".5" stop-color="#2a78bf"/>
+            <stop offset=".82" stop-color="#f59e5b"/>
+            <stop offset="1" stop-color="#ffd79a"/>
+          </linearGradient>
+          <radialGradient id="w-sun">
+            <stop offset="0" stop-color="#fff6c9"/>
+            <stop offset=".55" stop-color="#ffd65a"/>
+            <stop offset="1" stop-color="#ffd65a" stop-opacity="0"/>
+          </radialGradient>
+        </defs>
+        <rect width="660" height="250" fill="url(#w-sky)"/>
+        <g class="welcome-sun">
+          <circle cx="480" cy="200" r="95" fill="url(#w-sun)" opacity=".7"/>
+          <circle cx="480" cy="200" r="40" fill="#ffe27a"/>
+        </g>
+        <path d="M0 250V175l70-55 60 45 85-85 75 80 60-40 80 70 70-60 85 55 75-45v110Z" fill="#9cc4e8" opacity=".75"/>
+        <path d="M215 80l-28 28 20-6 10 14 12-16 18 10Z M505 130l-22 19 16-4 8 10 9-11 13 6Z" fill="#fff" opacity=".9"/>
+        <path d="M0 250v-45l90-40 80 35 100-55 90 50 90-40 100 45 110-50v100Z" fill="#f4f9fd"/>
+        <path d="M0 250v-22l120-18 140 14 150-20 130 16 120-14v44Z" fill="#fff"/>
+        <path d="M-20 178 680 62" stroke="#0b2444" stroke-width="2.5" fill="none"/>
+        <path d="M330 120v86" stroke="#0b2444" stroke-width="5" stroke-linecap="round"/>
+        <path d="M318 122h24" stroke="#0b2444" stroke-width="5" stroke-linecap="round"/>
+        <g>
+          <animateMotion path="M-60 184.600 L720 55.400" dur="11s" repeatCount="indefinite"/>
+          <path d="M0 0v16" stroke="#0b2444" stroke-width="3"/>
+          <rect x="-19" y="16" width="38" height="28" rx="9" fill="#e23b3b" stroke="#fff" stroke-width="2"/>
+          <path d="M-13 23h11v9h-11z M2 23h11v9H2z" fill="#cfe8fb"/>
+        </g>
+        <g>
+          <animateMotion path="M-60 184.600 L720 55.400" dur="11s" begin="-5.500s" repeatCount="indefinite"/>
+          <path d="M0 0v16" stroke="#0b2444" stroke-width="3"/>
+          <rect x="-19" y="16" width="38" height="28" rx="9" fill="#ffb21f" stroke="#fff" stroke-width="2"/>
+          <path d="M-13 23h11v9h-11z M2 23h11v9H2z" fill="#cfe8fb"/>
+        </g>
+      </svg>
+      <div class="snow" aria-hidden="true"></div>
+      <div class="welcome-heading">
+        <span class="welcome-kicker" id="welcome-kicker"></span>
+        <h2 id="welcome-title"></h2>
+      </div>
+    </div>
+    <div class="welcome-body">
+      <div class="countdown" id="welcome-countdown"></div>
+      <p id="welcome-sub"></p>
+      <ul id="welcome-list"></ul>
+      <button type="button" id="welcome-close">Let's go</button>
+    </div>
+  </dialog>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="resorts.js"></script>

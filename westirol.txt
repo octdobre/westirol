@@ -1,68 +1,65 @@
 
-
-
 # Lechtal
-Familienskigebiet Stanzach - Stanzach 55a, 6642 Stanzach - 47.379558/10.559589 - JUST T-BAR LIFT
-Skilifte Knittel - Untergiblen 15 6652 Elbigenalp - 47.284697,10.425449 - JUST T-BAR LIFT
+Stanzach Familienskigebiet - Stanzach 55a, 6642 Stanzach - 47.379558,10.559589 - JUST T-BAR LIFT - 09:00 - 16:00 - 19.12.2026 - 07.03.2027 - Parking Gratis
+Knittel Skilifte - Untergiblen 15 6652 Elbigenalp - 47.284697,10.425449 - JUST T-BAR LIFT - 10:00 - 16:00 - 18.12.2026 - Snow Ends - Parking Gratis
 
 # Tannheimer Tal
-Lifte Nesselwängle - Nesselwängle 92 6672 Nesselwängle - 47.486201,10.603185 - JUST CHAIRLIFT
-Bergbahnen Tannheimer Tal - Bergbahnweg 12, 6675 Tannheim - 47.499433,10.524924
+Nesselwängle Lifte - Nesselwängle 92 6672 Nesselwängle - 47.486201,10.603185 - JUST CHAIRLIFT - 9:15 – 16:00 - Unknown Start Date - Snow Ends - Parking 5 Euros per day
+Tannheimer Tal Bergbahnen - Bergbahnweg 12, 6675 Tannheim - 47.499433,10.524924 - 8:45 – 16:15 - 19.12.2026 - 29.03.2027 - Parking 5 Euros per day
 
 # Reutte
-Waldrast Lift - Krankenhausstraße 169, 6600 Ehenbichl - 47.471811,10.718662 - JUST T-BAR LIFT
-Schollenwiesenlift Höfen - Schiliftweg 5, 6604 Höfen - 47.470355,10.680779 - JUST T-BAR LIFT
-Bergwelt Hahnenkamm Reuttener Seilbahnen - Bergbahnstraße 18, 6604 Höfen - 47.478174,10.679516
+Waldrast Lift - Krankenhausstraße 169, 6600 Ehenbichl - 47.471811,10.718662 - JUST T-BAR LIFT - 9:30 – 16:00 - Unknown Start Date - Snow Ends - Parking Gratis
+Höfen Schollenwiesenlift - Schiliftweg 5, 6604 Höfen - 47.470355,10.680779 - JUST T-BAR LIFT - Unknown Opening Hours - Unknown Start Date - Snow Ends - Parking Gratis
+Hahnenkamm Reuttener Bergwelt Seilbahnen - Bergbahnstraße 18, 6604 Höfen - 47.478174,10.679516 - 8.30 – 16.00 - 27.11.2026 - Snow Ends - Parking 5 Euros per day
 
 # Lermos - Reutte
-Skilift Grünberg Obsteig - Finsterfiecht 49 6416 Obsteig - 47.292788,10.915657 - JUST T-BAR LIFT
-Marienbergbahnen Biberwier - Marienbergweg 16 6633 Biberwier - 47.372787,10.888374
-Grubigsteinbahnen Lermoos - Juch 3 6631 Leermos - 47.401604,10.878825
-Ehrwalder Almbahn - Dr. Ludwig Ganghoferstraße 66 6632 Ehrwald - 47.388003,10.937855
-Wettersteinbahnen Ehrwald - Ebne 50 A-6632 Ehrwald - 47.407637,10.927955
-Tiroler Zugspitzbahn - Obermoos 1, 6632 Ehrwald- 47.426178,10.941905
-Bergbahnen Berwang/Bichlbach - Berwang 120, 6622 Berwang - 47.409334,10.752651
+Grünberg Obsteig Skilift - Finsterfiecht 49 6416 Obsteig - 47.292788,10.915657 - JUST T-BAR LIFT - 9:30- 16:00 - Unknown Start Date - Snow Ends - Parking Gratis
+Marienbergbahnen Biberwier - Marienbergweg 16 6633 Biberwier - 47.372787,10.888374 - 8:30 – 16:30 - 18.12.2026 - 29.03.2027 - Parking Gratis
+Grubigsteinbahnen Lermoos - Juch 3 6631 Leermos - 47.401604,10.878825 - 8:30 – 16:30 - 11.12.2026 - 04.04.2027 - Parking Gratis
+Ehrwalder Almbahn - Dr. Ludwig Ganghoferstraße 66 6632 Ehrwald - 47.388003,10.937855 - 8:00 – 16:30 - 11.12.2026 – 04.04.2027 - Parking 5 Euros per day
+Wettersteinbahnen Ehrwald - Ebne 50 A-6632 Ehrwald - 47.407637,10.927955 - 8:30 – 16:30 - 18.12.2026 – 14.03.2027 - Parking 5 Euros per day
+Tiroler Zugspitzbahn - Obermoos 1, 6632 Ehrwald- 47.426178,10.941905 - 8:40 – 16:40 - 4.12.2026 - 04.04.2027 - Parking 5 Euros per day
+Berwang/Bichlbach Bergbahnen- Berwang 120, 6622 Berwang - 47.409334,10.752651 - 8:50 - 16:15 - 18.12.2026 – 04.04.2027 -  Parking Gratis
 
 # Seefeld
-Gschwandtkopflifte Seefeld - Gschwandtkopf 702 6100 Seefeld in Tirol -  47.325132,11.179345 - JUST CHAIRLIFT
-Birkenlift Seefeld - Leutascher Str. 634, 6100 Seefeld in Tirol - 47.337145,11.178903 - JUST T-BAR LIFT
+Gschwandtkopflifte Seefeld - Gschwandtkopf 702 6100 Seefeld in Tirol -  47.325132,11.179345 - JUST CHAIRLIFT - 9:00 – 16:30 - 11.12.2026 - 21.03.2027 - Parking Gratis
+Birkenlift Seefeld - Leutascher Str. 634, 6100 Seefeld in Tirol - 47.337145,11.178903 - JUST T-BAR LIFT - 09:00 - 16:00 - 18.12.2026 - Snow Ends - Parking Gratis
 
 # Inntal
-Bungerlochlift Tarrenz - Schulgasse 30 6464 Tarrenz - 47.268106,10.755253 - JUST T-BAR LIFT
-Galtwiesenlift - 6471 Wald - 47.196318,10.784336  - JUST T-BAR LIFT
-Imster Bergbahnen -  Hoch-Imst 19 6460 Gemeinde Imst - 47.241140,10.723525
-Bergbahnen Venet - Hauptstraße 38 6511 Zams - 47.153783,10.585429
-Riefenlift Zams - Rifenalbahn Talstation, 6511 Zams - 47.164190,10.599803
-Skilift Tobadill - Schützen 6552 Tobadill - 47.123556,10.515708 - JUST T-BAR LIFT
+Tarrenz Bungerlochlift - Schulgasse 30 6464 Tarrenz - 47.268106,10.755253 - JUST T-BAR LIFT - 11:00 – 16:00 - End of December - End of February - Parking Gratis
+Galtwiesenlift - 6471 Wald - 47.196318,10.784336  - JUST T-BAR LIFT - 10:00 – 16:00 - End of December - End of February - Parking Gratis
+Imster Bergbahnen -  Hoch-Imst 19 6460 Gemeinde Imst - 47.241140,10.723525 - 9:00 – 16:00 - 19.12.2026 - 14.03.2027 - Parking Gratis
+Venet Bergbahnen - Hauptstraße 38 6511 Zams - 47.153783,10.585429 - 9:00 – 16:00 - 20.12.2026 - Snow Ends - Parking Gratis
+Zams Riefenlift - Rifenalbahn Talstation, 6511 Zams - 47.164190,10.599803 - Unknown Opening Hours - Unknown Start Date - Snow Ends - Parking Gratis
+Tobadill Skilift - Schützen 6552 Tobadill - 47.123556,10.515708 - JUST T-BAR LIFT - Unknown Opening Hours - Unknown Start Date - Snow Ends - Parking Gratis
 
 # Oetztal
-Bergbahnen Hochoetz - Angerweg 13 6433 Oetz - 47.1995152,10.9026463
-Balbach Wiesenlift - Ochsengarten 6433 Oetz - 47.227430,10.932330 - JUST T-BAR LIFT
-SKIlifte Niederthai - Am Tauferberg 6441 Umhausen - 47.1265733,10.961486 - JUST T-BAR LIFT
-Bergbahnen Sölden, Ötztaler Gletscher - Dorfstraße 115 6450 Sölden - 46.9598334,11.0068136
-Bergbahnen Obergurgl Hochgurgl - Gurglerstraße 49, 6456 Gurgl - 46.8982418,11.0401245
-Skigebiet Vent - Franz-Senn-Weg 21 6458 Vent - 46.860002,10.914751
+Hochoetz Bergbahnen - Angerweg 13 6433 Oetz - 47.1995152,10.9026463 - 8:30 – 16:00 - 04.12.2026 - 11.04.2027 - Parking 5 Euros per day
+Balbach Wiesenlift - Ochsengarten 6433 Oetz - 47.227430,10.932330 - JUST T-BAR LIFT - 8:30 – 16:00 - 04.12.2026 - 11.04.2027 - Parking 5 Euros per day
+Niederthai Skilifte - Am Tauferberg 6441 Umhausen - 47.128376,10.968237 - JUST T-BAR LIFT - 10:00 - 16:00 - 12.12.2026 - 04.04.2027 - Parking Gratis
+Sölden Bergbahnen, Ötztaler Gletscher - Dorfstraße 115 6450 Sölden - 46.9598334,11.0068136 - 9:00 – 16:00 - 09.10.2026 - 02.05.2027 - Parking 10 euros per day
+Obergurgl Hochgurgl Bergbahnen - Gurglerstraße 49, 6456 Gurgl - 46.8982418,11.0401245 - 9:00 – 16:00 - 19.11.2026 - 18.04.2027 - Parking Gratis
+Vent Skigebiet - Franz-Senn-Weg 21 6458 Vent - 46.860002,10.914751 - 9:30 – 16:00 - 19.12.2026 - 02.04.2027 - Parking 6 Euros per day
 
 # Piztal
-Hochzeiger Bergbahnen - Liß 270 6474 Jerzens - 47.153117,10.756806
-Mandarfen Übungslift - Mandarfen 89, 6481 Plangeroß - 46.968410,10.870650 - JUST T-BAR LIFT
-Rifflsee Bergbahnen - Mandarfen 89 6481 Plangeroß - 46.968410,10.870650
-Pitztaler Gletscher - Mittelberg 103 6481 St. Leonhard im Pitztal - 46.958823,10.871508
+Hochzeiger Bergbahnen - Liß 270 6474 Jerzens - 47.153117,10.756806 - 8:45 – 16:30 - 04.12.2026 - 04.04.2027 - Parking Gratis
+Mandarfen Übungslift - Mandarfen 89, 6481 Plangeroß - 46.968410,10.870650 - JUST T-BAR LIFT - 08:30 - 16:00 - 26.09.2026 - 02.05.2027 - Parking Gratis
+Rifflsee Bergbahnen - Mandarfen 89 6481 Plangeroß - 46.968410,10.870650 - 08:30 - 16:00 - 26.09.2026 - 02.05.2027 - Parking Gratis
+Pitztaler Gletscher - Mittelberg 103 6481 St. Leonhard im Pitztal - 46.958823,10.871508 - 8:00 – 16:30 - 26.09.2026 - 02.05.2027 - Parking Gratis
 
 # Kaunertal
-Kaunertaler Gletscherbahnen - 46.886686,10.719824
+Kaunertaler Gletscherbahnen - 46.886686,10.719824 - 9:00 – 16:00 - 17.10.2026 - 17.05.2027 - Parking Gratis
 
 # Oberinntal
-Bergbahnen Fendels - Ried 302, 6531 Ried im Oberinntal - 47.057471,10.660558
-Bergbahnen Serfaus-fiss-ladis - L286 73, 6532 Ladis - 47.0697738,10.6463075
-Bergbahnen Nauders - Gewerbegebiet 1, 6543 Nauders - 46.874874,10.508305
+Fendels Bergbahnen - Ried 302, 6531 Ried im Oberinntal - 47.057471,10.660558 - 9:00 – 16:45  - 18.12.2026 - 28.03.2027 - Parking Gratis
+Serfaus-Fiss-Ladis Bergbahnen - L286 73, 6532 Ladis - 47.0697738,10.6463075 - 8.30 - 16.20 - 04.12.2026 - 04.04.2027 - Parking 6 Euros per day
+Nauders Bergbahnen - Gewerbegebiet 1, 6543 Nauders - 46.874874,10.508305 - 8:00 – 17:00 - 11.12.2026 - 04.04.2027 - Parking Gratis
 
 # Paznauntal
-Bergbahnen See - Silvretta Straße 178 6553 See - 47.08259,10.463563
-Ischgl SKi Resort - 6561 Ischgl - 47.011773,10.287720
-Bergbahnen Kappl - Au 483 6555 Kappl - 47.060830/10.375490
-Bergbahnen Galtür - Galtür 39 6563 Galtür - 46.965604,10.164282
-
+See Bergbahnen - Silvretta Straße 178 6553 See - 47.08259,10.463563 - 08:30 - 16:00 - 11.12.2026 - 04.04.2027 - Parking Gratis 
+Kappl Bergbahnen - Au 483 6555 Kappl - 47.060830,10.375490 - 8:30 – 16:00 - 11.12.2026 - 04.04.2027 - Parking Gratis 
+Ischgl Silvrettaseilbahn - 6561 Ischgl - 47.011773,10.287720 - 08.00 – 16.30 - 26.11.2026 - 02.05.2027 - Parking 5 Euros per day 
+Galtür Bergbahnen - Galtür 39 6563 Galtür - 46.965604,10.164282 - 8:45 – 16:00 - 04.12.2026 - 11.04.2027 - Parking Gratis
 
 
 
