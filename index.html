@@ -4,6 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>West Tirol Ski Resorts</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
   <link rel="stylesheet" href="styles.css">
 </head>
@@ -27,12 +28,18 @@
       <!-- "Resort of the day" and "Next opening" cards -->
       <section class="panel highlights" id="highlights" aria-label="Highlights"></section>
 
-      <!-- Filters: lift type, season status, valley -->
+      <!-- Filters: lift type, season status, season openings, weather, valley -->
       <section class="panel">
         <h2>Lift type</h2>
         <div class="chips" id="type-chips" role="group" aria-label="Filter by lift type"></div>
         <h2 class="gap">Season status</h2>
         <div class="chips" id="status-chips" role="group" aria-label="Filter by season status"></div>
+        <!-- Season openings: each button only shows while it has resorts (filled by app.js) -->
+        <h2 class="gap" id="opening-heading" hidden>Season openings</h2>
+        <div class="chips" id="opening-chips" role="group" aria-label="Filter by season opening"></div>
+        <!-- Weather (open resorts, Open-Meteo forecast): buttons only show while they have resorts -->
+        <h2 class="gap" id="weather-heading" hidden>Weather</h2>
+        <div class="chips" id="weather-chips" role="group" aria-label="Filter by weather"></div>
         <h2 class="gap"><label for="valley-select">Valley</label></h2>
         <select id="valley-select"></select>
       </section>
@@ -124,6 +131,15 @@
       <ul id="welcome-list"></ul>
       <button type="button" id="welcome-close">Let's go</button>
     </div>
+  </dialog>
+
+  <!-- Resort details on phones: a full-screen sheet above everything (filled by app.js) -->
+  <dialog id="details-sheet" class="sheet" aria-label="Resort details">
+    <div class="sheet-bar">
+      <span class="sheet-handle" aria-hidden="true"></span>
+      <button type="button" class="sheet-close" id="sheet-close" aria-label="Close details">&times;</button>
+    </div>
+    <div class="sheet-body" id="sheet-body"></div>
   </dialog>
 
   <!-- Leaflet map library, resort data, then the app -->

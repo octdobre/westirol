@@ -167,7 +167,7 @@ select, input[type="text"], button { font: inherit; }
   cursor: pointer;
 }
 .card-resort:hover .card-name { text-decoration: underline; }
-.card-name { font-weight: 700; font-size: .95rem; overflow-wrap: anywhere; }
+.card-name { font-weight: 700; font-size: .95rem; overflow-wrap: break-word; min-width: 0; }
 .card-extra { font-size: .8rem; color: var(--ink-soft); white-space: nowrap; font-variant-numeric: tabular-nums; }
 /* #endregion */
 
@@ -443,6 +443,47 @@ input[type="search"]:focus { background: #fff; border-color: var(--accent); box-
 @keyframes wave { 0%, 100% { transform: rotate(0); } 25% { transform: rotate(16deg); } 75% { transform: rotate(-10deg); } }
 /* #endregion */
 
+/* #region Time column */
+/* Every details banner and plan step reads "Action in | countdown | at time":
+   label column, countdown column, then a fixed-width time column, so stacked times line up. */
+.popup .hero, .popup .plan-step {
+  display: grid; grid-template-columns: minmax(0, 1fr) 98px 80px;
+  align-items: center; column-gap: 10px;
+}
+.popup .hero > .hero-text { grid-column: 1; }
+.popup .hero > .hero-tiles { grid-column: 2; justify-self: end; margin-left: 0; }
+.popup .hero > .when, .popup .plan-step > .when { grid-column: 3; }
+.popup .hero.ended, .popup .hero.tomorrow { grid-template-columns: minmax(0, 1fr); }
+.hero-label { line-height: 1.25; letter-spacing: .06em; }
+.hero-tile { min-width: 46px; }
+
+.when { text-align: right; line-height: 1.15; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.when small { display: block; font-size: .6rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; opacity: .85; }
+.when-time { display: flex; align-items: baseline; justify-content: flex-end; gap: 4px; margin-top: 1px; }
+.when-time .at { font-size: .72rem; font-weight: 600; opacity: .8; }
+.when-time b { font-size: 1.15rem; }
+.hero.night .when-time b { color: #ffe9a8; }
+
+.plan-step .plan-label { grid-column: 1; min-width: 0; line-height: 1.25; letter-spacing: .04em; white-space: nowrap; }
+.plan-in { grid-column: 2; justify-self: end; font-size: .95rem; white-space: nowrap; font-variant-numeric: tabular-nums; }
+
+/* The hype tag gets its own row under the slope banner line. */
+.popup .hero.slope > .hype-tag { grid-column: 1 / -1; justify-self: start; margin-top: 8px; }
+
+/* "Try tomorrow!" banner: soft dawn colors, dark text. */
+.plan-wrap { margin: 0 0 8px; }
+.plan-wrap > .plan { margin: 0; }
+.hero.tomorrow {
+  margin: 0 0 6px; padding: 10px 12px;
+  background: linear-gradient(120deg, #ffe7c7, #ffd0b0 60%, #f7b7c4);
+  border: 1px solid #f4b98e;
+  color: #6b2a00;
+}
+.hero.tomorrow .hero-label { font-size: .95rem; letter-spacing: .03em; text-transform: none; }
+.hero.tomorrow .hero-label svg { width: 22px; height: 22px; color: #d9480f; }
+.hero.tomorrow .hero-note { opacity: 1; }
+/* #endregion */
+
 /* #region Day plan */
 /* Go to bed -> Wake up at -> Start driving -> On the slope, joined by dashed gap lines. */
 .plan { margin: 0 0 8px; }
@@ -473,12 +514,12 @@ input[type="search"]:focus { background: #fff; border-color: var(--accent); box-
 @keyframes twinkle { from { opacity: .2; } to { opacity: 1; } }
 /* Crescent moon: a circle drawn only by its inset shadow. */
 .hero.night .moon {
-  position: absolute; top: 7px; right: 134px; z-index: -1;
+  position: absolute; top: 7px; right: 206px; z-index: -1;
   width: 18px; height: 18px; border-radius: 50%;
   box-shadow: inset -5px 2px 0 0 #ffe9a8;
   filter: drop-shadow(0 0 6px rgba(255, 233, 168, .6));
 }
-.hero.night:not(:has(.hero-tiles)) .moon { right: 16px; }
+.hero.night:not(:has(.hero-tiles)) .moon { right: 92px; }
 .hero.night .hero-label { color: #ffe9a8; }
 .hero.night .hero-label svg { width: 22px; height: 22px; color: #fff; }
 .hero.night .hero-tile { background: rgba(255, 255, 255, .1); border-color: rgba(255, 233, 168, .35); }
@@ -723,3 +764,254 @@ input[type="search"]:focus { background: #fff; border-color: var(--accent); box-
   .tchip.slope svg, .hero.slope .hero-label svg, .hype-tag { animation: none; }
 }
 /* #endregion */
+
+/* Countdown tiles inside the light "Wake up in" / "Start driving in" steps: same rounded squares
+   as the dark banners, tinted to each step's colors. */
+.popup .plan-step > .hero-tiles { grid-column: 2; justify-self: end; }
+.popup .plan-step { padding: 8px 12px; }
+.plan-step .hero-tile { background: rgba(255, 255, 255, .7); border: 1px solid currentColor; border-color: rgba(0, 0, 0, .12); }
+.plan-step .hero-tile span { opacity: .75; }
+.plan-step.wake .hero-tile { border-color: #f1b979; }
+.plan-step.drive .hero-tile { border-color: #a9c8e6; }
+
+/* #region Opening tomorrow (fire) */
+/* Welcome screen: fiery resort cards for tomorrow's openings, a flame section heading,
+   and a fire-colored kicker when the whole screen is about tomorrow. */
+.welcome-resort.hot {
+  border-color: #f59a5b;
+  background: linear-gradient(110deg, #fff1e4, #ffe1cc 60%, #ffd2c2);
+  box-shadow: 0 0 0 1px rgba(255, 140, 50, .25), 0 4px 14px rgba(226, 86, 43, .22);
+  animation: hot-glow 1.6s ease-in-out infinite alternate;
+}
+.welcome-resort.hot:hover { border-color: #e2562b; background: linear-gradient(110deg, #ffe9d6, #ffd6bb 60%, #ffc7b3); }
+.welcome-resort.hot .badge { animation: ember 1s ease-in-out infinite alternate; }
+.welcome-resort strong .pill { margin-left: 8px; font-size: .68rem; vertical-align: 2px; }
+@keyframes hot-glow {
+  from { box-shadow: 0 0 0 1px rgba(255, 140, 50, .25), 0 4px 12px rgba(226, 86, 43, .18); }
+  to   { box-shadow: 0 0 0 2px rgba(255, 150, 60, .45), 0 4px 20px rgba(226, 70, 20, .35); }
+}
+.welcome-section {
+  display: flex; align-items: center; gap: 6px;
+  margin-top: 6px; padding: 2px 4px;
+  font-size: .75rem; font-weight: 800; letter-spacing: .1em; text-transform: uppercase;
+  color: #c2410c;
+}
+.welcome-section .flame { width: 18px; height: 18px; }
+.welcome-section .flame path:first-child { fill: #e2562b; }
+.welcome-section .flame path:last-child { fill: #ffc24a; }
+.welcome.hot .welcome-kicker { background: linear-gradient(120deg, #ff8a1f, #e02424); color: #fff; box-shadow: 0 2px 12px rgba(255, 98, 0, .7); }
+@media (prefers-reduced-motion: reduce) { .welcome-resort.hot, .welcome-resort.hot .badge { animation: none; } }
+/* #endregion */
+
+/* #region Season-opening filter chips */
+/* Flame chips under the season status; pressed they turn fire-colored. */
+.chip.chip-opening { padding: 6px 12px; gap: 5px; }
+.chip.chip-opening[hidden] { display: none; }
+.chip.chip-opening .flame { width: 16px; height: 16px; flex: none; }
+.chip.chip-opening .flame path:first-child { fill: #e2562b; }
+.chip.chip-opening .flame path:last-child { fill: #ffc24a; }
+.chip.chip-opening[aria-pressed="true"] {
+  background: linear-gradient(120deg, #d9480f, #c81e1e);
+  border-color: #c81e1e; color: #fff;
+  box-shadow: 0 0 8px rgba(255, 98, 0, .45);
+}
+.chip.chip-opening[aria-pressed="true"] small { color: #ffe3c9; }
+.chip.chip-opening[aria-pressed="true"] .flame path:first-child { fill: #fff3c4; }
+.chip.chip-opening[aria-pressed="true"] .flame path:last-child { fill: #ff9a1f; }
+/* #endregion */
+
+/* #region Phones */
+/* Phone layout (same 800px breakpoint as above): map on top, sidebar below. Here: a taller map,
+   a details card sized to small screens, and cards that wrap instead of breaking words. */
+@media (max-width: 800px) {
+  .map { height: 62vh; min-height: 340px; }
+  .site-header p { font-size: .85rem; }
+  .sidebar { padding: 10px; }
+
+  /* Highlight cards: resort name on its own line when space is short. */
+  .card-resort { flex-wrap: wrap; row-gap: 0; }
+
+  /* Details card: tighter frame, smaller tiles and time column so labels keep room. */
+  .leaflet-popup-content { margin: 12px 12px 10px; }
+  .popup h3 { font-size: 1.02rem; }
+  .popup .hero, .popup .plan-step { grid-template-columns: minmax(0, 1fr) auto 64px; column-gap: 8px; padding: 8px 10px; }
+  .hero-label { font-size: .64rem; letter-spacing: .04em; }
+  .hero-label svg { width: 17px; height: 17px; margin-right: 4px; vertical-align: -4px; }
+  .plan-step .plan-label { font-size: .64rem; letter-spacing: .03em; white-space: normal; }
+  .plan-label svg { width: 16px; height: 16px; }
+  .hero-tiles { gap: 4px; }
+  .hero-tile { min-width: 36px; padding: 4px 4px 3px; border-radius: 8px; }
+  .hero-tile b { font-size: 1.1rem; }
+  .hero-tile span { font-size: .52rem; letter-spacing: .06em; }
+  .when small { font-size: .54rem; }
+  .when-time b { font-size: .98rem; }
+  .when-time .at { font-size: .64rem; }
+  .hero.night .moon { display: none; }
+  /* Icon beside the label text, so a wrapped label (e.g. "Start driving / in") stays aligned. */
+  .hero-label, .plan-step .plan-label { display: flex; align-items: center; gap: 5px; }
+  .hero-label svg { flex: none; margin-right: 0; }
+  /* Pinch to zoom on phones; the +/- buttons would cover the details card. */
+  .leaflet-control-zoom { display: none; }
+  .facts { font-size: .8rem; }
+  .facts dt { padding-right: 8px; font-size: .62rem; }
+
+  /* Larger tap targets for chips and the copy buttons. */
+  .chip { min-height: 34px; }
+  .copy-btn { padding: 5px 8px; }
+
+  /* Welcome screen fits short phones: smaller hero and countdown. */
+  .welcome h2 { font-size: 1.6rem; }
+  .countdown-tiles { gap: 6px; }
+  .tile { padding: 9px 4px 7px; }
+}
+/* #endregion */
+
+/* #region Google Maps navigation (phones) */
+/* Phones swap "Show directions" (route line on this map) for a link that opens Google Maps. */
+.gmaps-btn {
+  display: none;
+  align-items: center; justify-content: center; gap: 8px;
+  text-align: center; text-decoration: none;
+  background: linear-gradient(120deg, #1a73e8, #1557b0);
+  box-shadow: 0 4px 12px rgba(26, 115, 232, .3);
+}
+.popup a.gmaps-btn { color: #fff; }
+.gmaps-btn svg { width: 18px; height: 18px; flex: none; }
+.gmaps-btn:hover { background: linear-gradient(120deg, #1765cc, #124a99); }
+@media (max-width: 800px) {
+  .popup .desktop-only { display: none; }
+  .popup .gmaps-btn { display: flex; padding: 11px 12px; font-size: .92rem; }
+}
+/* #endregion */
+
+/* #region Details sheet (phones) */
+/* Full-width sheet that slides up from the bottom, above the map, header and everything else.
+   Same content as the desktop map popup; it scrolls on its own. */
+.sheet {
+  width: 100%; max-width: 100%;
+  height: auto; max-height: 92dvh;
+  margin: auto 0 0;
+  padding: 0;
+  border: 0; border-radius: 20px 20px 0 0;
+  background: #fff; color: var(--ink);
+  box-shadow: 0 -10px 40px rgba(8, 30, 60, .35);
+  overflow: hidden;
+}
+.sheet[open] { display: flex; flex-direction: column; animation: sheet-up .3s cubic-bezier(.2, .9, .3, 1); }
+.sheet::backdrop { background: rgba(8, 32, 64, .55); }
+@keyframes sheet-up { from { transform: translateY(100%); } to { transform: none; } }
+
+.sheet-bar {
+  position: relative; flex: none;
+  display: flex; justify-content: center;
+  padding: 8px 12px 2px;
+}
+.sheet-handle { width: 42px; height: 5px; border-radius: 999px; background: var(--ice-line); }
+.sheet-close {
+  position: absolute; top: 6px; right: 10px;
+  width: 36px; height: 36px;
+  border: 0; border-radius: 50%;
+  background: var(--ice); color: var(--ink);
+  font-size: 1.5rem; line-height: 1;
+  cursor: pointer;
+}
+.sheet-body {
+  flex: 1 1 auto; min-height: 0;
+  overflow-y: auto; overscroll-behavior: contain;
+  padding: 6px 16px calc(16px + env(safe-area-inset-bottom));
+}
+.sheet-body .popup h3 { margin-right: 40px; font-size: 1.15rem; }
+@media (prefers-reduced-motion: reduce) { .sheet[open] { animation: none; } }
+/* #endregion */
+
+/* #region Weather */
+/* Weather colors: warm sun, icy snow, grey cloud. */
+:root { --wx-sunny: #f59e0b; --wx-snowy: #3b82c4; --wx-cloudy: #6b7c8c; }
+
+/* Details card: icon + description left, temperature with high/low right, then snow and UV lines. */
+.wx {
+  margin: 0 0 10px; padding: 10px 12px 8px;
+  border-radius: 14px;
+  border: 1px solid var(--ice-line);
+  color: var(--ink);
+}
+.wx.sunny { background: linear-gradient(130deg, #fff8e1, #ffeccc 60%, #e7f2fc); border-color: #f7d48b; }
+.wx.snowy { background: linear-gradient(130deg, #eef6fd, #dcebf9); border-color: #b5d1ec; }
+.wx.cloudy { background: linear-gradient(130deg, #f3f6f9, #e3e9ef); border-color: #ccd6df; }
+.wx-head { display: flex; align-items: center; gap: 10px; }
+.wx-icon { flex: none; display: grid; place-items: center; width: 44px; height: 44px; border-radius: 12px; background: rgba(255, 255, 255, .75); }
+.wx-icon svg { width: 30px; height: 30px; }
+.wx.sunny .wx-icon { color: var(--wx-sunny); }
+.wx.snowy .wx-icon { color: var(--wx-snowy); }
+.wx.cloudy .wx-icon { color: var(--wx-cloudy); }
+.wx.sunny .wx-icon svg { animation: sun-spin 24s linear infinite; }
+@keyframes sun-spin { to { transform: rotate(360deg); } }
+.wx-what { flex: 1 1 auto; min-width: 0; }
+.wx-when { font-size: .66rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-soft); }
+.wx-text { font-size: .95rem; font-weight: 700; }
+.wx-temps { flex: none; text-align: right; font-variant-numeric: tabular-nums; }
+.wx-now { display: flex; align-items: baseline; justify-content: flex-end; gap: 4px; }
+.wx-now b { font-size: 1.6rem; line-height: 1; }
+.wx-now small { font-size: .68rem; color: var(--ink-soft); }
+.wx-range { margin-top: 2px; font-size: .78rem; font-weight: 700; color: var(--ink-soft); }
+.wx-line {
+  display: flex; align-items: center; gap: 6px;
+  margin-top: 8px; padding: 5px 8px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, .6);
+  font-size: .8rem; font-weight: 600; color: var(--ink-soft);
+}
+.wx-line svg { width: 16px; height: 16px; flex: none; }
+.wx-line.powder { background: linear-gradient(120deg, #2563a8, #3b82c4); color: #fff; font-weight: 800; }
+.wx-line.uv { color: #8a5300; }
+.wx-line.uv.high { background: #fde2d3; color: #b42318; font-weight: 800; box-shadow: inset 0 0 0 1px #f4a284; }
+.popup a.wx-credit { display: block; margin-top: 6px; font-size: .66rem; color: var(--ink-soft); text-align: right; text-decoration: none; }
+.popup a.wx-credit:hover { text-decoration: underline; }
+
+/* Small icon after the resort name in the list. */
+.wx-mini { display: inline-grid; place-items: center; width: 22px; height: 22px; vertical-align: -5px; border-radius: 6px; }
+.wx-mini svg { width: 17px; height: 17px; }
+.wx-mini.sunny { color: var(--wx-sunny); background: #fff4d6; }
+.wx-mini.snowy { color: var(--wx-snowy); background: #e3effa; }
+.wx-mini.cloudy { color: var(--wx-cloudy); background: #edf1f5; }
+
+/* Weather icon on the map pin (bottom-left corner). */
+.wx-pin {
+  position: absolute; bottom: -6px; left: -7px;
+  display: grid; place-items: center;
+  width: 19px; height: 19px; border-radius: 50%;
+  background: #fff; border: 1.5px solid #fff;
+  box-shadow: 0 1px 4px rgba(10, 35, 60, .4);
+}
+.wx-pin svg { width: 14px; height: 14px; }
+.wx-pin.sunny { color: var(--wx-sunny); }
+.wx-pin.snowy { color: var(--wx-snowy); }
+.wx-pin.cloudy { color: var(--wx-cloudy); }
+
+/* Filter chips "Sunny" and "Fresh powder". */
+.chip.chip-weather { padding: 6px 12px; gap: 5px; }
+.chip.chip-weather[hidden] { display: none; }
+.chip.chip-weather svg { width: 17px; height: 17px; flex: none; }
+.chip.chip-weather.sunny svg { color: var(--wx-sunny); }
+.chip.chip-weather.powder svg { color: var(--wx-snowy); }
+.chip.chip-weather.sunny[aria-pressed="true"] { background: linear-gradient(120deg, #f59e0b, #e8790c); border-color: #e8790c; color: #fff; }
+.chip.chip-weather.powder[aria-pressed="true"] { background: linear-gradient(120deg, #2563a8, #3b82c4); border-color: #2563a8; color: #fff; }
+.chip.chip-weather[aria-pressed="true"] svg, .chip.chip-weather[aria-pressed="true"] small { color: #fff; }
+@media (prefers-reduced-motion: reduce) { .wx.sunny .wx-icon svg { animation: none; } }
+/* #endregion */
+
+/* #region Welcome: fresh powder */
+/* Icy-blue section and cards for resorts with fresh snow today or tomorrow. */
+.welcome-section.powder-section { color: #2563a8; }
+.welcome-section.powder-section svg { width: 18px; height: 18px; color: #3b82c4; }
+.welcome-resort.powder {
+  border-color: #9cc3e8;
+  background: linear-gradient(110deg, #f0f7fe, #dcebf9 60%, #cfe3f6);
+  box-shadow: 0 4px 14px rgba(37, 99, 168, .18);
+}
+.welcome-resort.powder:hover { border-color: #2563a8; background: linear-gradient(110deg, #e6f1fd, #d0e4f7 60%, #c2dbf3); }
+.pill.powder { background: linear-gradient(120deg, #2563a8, #3b82c4); color: #fff; }
+.pill.powder svg { width: 13px; height: 13px; margin-right: 3px; vertical-align: -2px; }
+/* #endregion */
+/* No countdown (e.g. the powder-only welcome screen): no empty gap. */
+.countdown:empty { display: none; }

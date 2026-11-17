@@ -11,6 +11,7 @@
   var GEAR_MIN = 10;        // gearing up at the resort (boots, skis) before the lift
   var LIFT_MIN = 15;        // ski lift ride up to the slope
   var SLEEP_MIN = 8 * 60;   // a full night's sleep before a ski day
+  var TOMORROW_MIN = 60;    // from this long before a resort's lift closing, plan the ski day for tomorrow
 
   // Badge thresholds, in days.
   var LAST_DAYS = 7;        // "Last days" badge: days before the season end
@@ -18,6 +19,11 @@
 
   // How often statuses, timers and countdowns are recalculated.
   var REFRESH_MS = 30000;
+  // How often the weather forecast is fetched again.
+  var WEATHER_REFRESH_MS = 30 * 60 * 1000;
+  // Weather thresholds: snowfall that counts as fresh snow, and the UV index that gets a warning.
+  var FRESH_SNOW_CM = 1;
+  var UV_HIGH = 6;
 
   // Milliseconds per minute, hour and day.
   var MIN = 60000, HOUR = 60 * MIN, DAY = 24 * HOUR;
@@ -36,6 +42,12 @@
   var GEOCODE_URL = "https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&addressdetails=1&q=";
   var ROUTE_URL = "https://router.project-osrm.org/route/v1/driving/";
   var TABLE_URL = "https://router.project-osrm.org/table/v1/driving/";
+  var GMAPS_DIR_URL = "https://www.google.com/maps/dir/?api=1&destination=";   // + "lat,lon"
+  // Open-Meteo forecast (free, no key; CC BY 4.0, credited in the weather card). One request covers
+  // every resort: current temperature, plus today and tomorrow (high, low, code, snowfall, UV).
+  var WEATHER_URL = "https://api.open-meteo.com/v1/forecast?current=temperature_2m,weather_code" +
+    "&hourly=temperature_2m&daily=weather_code,temperature_2m_max,temperature_2m_min,snowfall_sum,uv_index_max" +
+    "&timezone=Europe%2FVienna&forecast_days=2";
 
   // Keys used in this browser's local storage.
   var STORE_HOME = "westirol.home";         // the saved home address
@@ -69,6 +81,17 @@
       '<path d="M14.1 10.5V6.2a1.4 1.4 0 0 1 2.8 0V15a5.5 5.5 0 0 1-5.5 5.5h-.4a5.5 5.5 0 0 1-4.3-2l-3-3.7a1.4 1.4 0 0 1 2.1-1.8l2.7 2.5"/></g>' +
       '<path d="M19.5 3a4 4 0 0 1 2.5 3"/><path d="M2 8.5A4 4 0 0 1 4 5.5"/>'),
 
+    // "Try tomorrow!" banner: sun rising over the horizon.
+    sunrise: lineIcon('<path d="M3 18h18"/><path d="M7 18a5 5 0 0 1 10 0"/>' +
+      '<path d="M12 7v3M5.6 10.6l1.8 1.8M18.4 10.6l-1.8 1.8M2.5 14.5h2M19.5 14.5h2"/>'),
+
+    // Weather: sun, snow cloud, cloud.
+    sunny: lineIcon('<circle cx="12" cy="12" r="4.5"/><path d="M12 2.5v2.5M12 19v2.5M2.5 12H5M19 12h2.5' +
+      'M5.3 5.3l1.8 1.8M16.9 16.9l1.8 1.8M5.3 18.7l1.8-1.8M16.9 7.1l1.8-1.8"/>'),
+    snowy: lineIcon('<path d="M7 15.5a4.5 4.5 0 1 1 1.3-8.8A5.5 5.5 0 0 1 18.8 9a3.3 3.3 0 0 1-.3 6.5z"/>' +
+      '<path d="M8 19.5h.01M12 18.5h.01M16 19.5h.01M10 22h.01M14 22h.01" stroke-width="2.6"/>'),
+    cloudy: lineIcon('<path d="M7 18.5a4.5 4.5 0 1 1 1.3-8.8A5.5 5.5 0 0 1 18.8 12a3.3 3.3 0 0 1-.3 6.5z"/>'),
+
     // Day plan: bed, alarm clock, car.
     bed: lineIcon('<path d="M2.5 19V6"/><path d="M2.5 15h19v4"/>' +
       '<path d="M21.5 15v-2.5a3 3 0 0 0-3-3H10V15"/><circle cx="6.3" cy="11.5" r="2"/>'),
@@ -89,7 +112,7 @@
   // Icon shown in each season status pill.
   var STATUS_ICON = { open: ICON.skier, prep: ICON.groomer, ended: ICON.wave };
   // Icon shown in each kind of hero banner.
-  var HERO_ICON = { slope: ICON.skier, opens: ICON.groomer, ended: ICON.wave, night: ICON.bed };
+  var HERO_ICON = { slope: ICON.skier, opens: ICON.groomer, ended: ICON.wave, night: ICON.bed, tomorrow: ICON.sunrise };
   // #endregion
 
   // #region Time (Vienna wall clock)
@@ -158,11 +181,6 @@
     var m = Math.round(min);
     return m < 60 ? m + " min" : Math.floor(m / 60) + " h" + (m % 60 ? " " + (m % 60) + " min" : "");
   }
-  // "21:30" today, "tomorrow 05:30", or "20.12.2026 08:15" further ahead.
-  function whenText(ms) {
-    var days = Math.round((dayStart(ms) - dayStart(state.now)) / DAY);
-    return (days === 1 ? "tomorrow " : days > 1 ? fmtDate(ms) + " " : "") + fmtClock(ms);
-  }
   // "08:30–16:00", or null when the lift hours are unknown.
   function hoursText(r) { return r.open ? r.open + "–" + r.close : null; }
   // #endregion
@@ -216,10 +234,13 @@
     now: viennaNow(),
     types: new Set(DEFAULT_TYPES),   // lift types switched on
     status: "all",                   // season status filter
+    opening: null,                   // season opening filter: null, "today", "tomorrow" or "weekend"
     valley: "all",                   // valley filter
     search: "",                      // normalized search text
     home: null,                      // { lat, lon, label, query, city }
-    distances: null                  // resort id -> { km, minutes, approx }
+    distances: null,                 // resort id -> { km, minutes, approx }
+    weather: null,                   // resort id -> forecast from Open-Meteo (see fetchWeather)
+    wxFilter: null                   // weather filter: null, "sunny" or "powder"
   };
 
   // Distance and drive time from home to a resort, or null without a home address.
@@ -231,11 +252,15 @@
   function refreshStatus() {
     var now = state.now = viennaNow();
     var today = dayStart(now);
+    var weekend = weekendOf(today);
     resorts.forEach(function (r) {
-      r.opensIn = null; r.lift = null; r.lastDays = null; r.isNew = false; r.openedToday = false;
+      r.opensIn = null; r.lift = null; r.lastDays = null; r.isNew = false; r.openedToday = false; r.opensTomorrow = false;
+      // Season start (real date) on the Friday, Saturday or Sunday of this week, today or later.
+      r.opensWeekend = !r.startEstimated && r.startMs >= Math.max(today, weekend.fri) && r.startMs <= weekend.sun;
       if (today < r.startMs) {
         r.status = "prep";
         r.opensIn = r.startMs + (r.openMs || 0) - now;   // until the lifts start on the first day
+        r.opensTomorrow = !r.startEstimated && r.startMs === today + DAY;   // real start date only
       } else if (today > r.endMs) {
         r.status = "ended";
       } else {
@@ -246,6 +271,12 @@
         r.lastDays = lastDaysLeft(r, now);
       }
     });
+  }
+
+  // Friday and Sunday (midnight) of the Monday-to-Sunday week that contains the given day.
+  function weekendOf(day) {
+    var monday = day - ((new Date(day).getUTCDay() + 6) % 7) * DAY;
+    return { fri: monday + 4 * DAY, sun: monday + 6 * DAY };
   }
 
   // Today's lift state while the season is open: waiting to start, running, or done for the season.
@@ -271,38 +302,116 @@
     if (r.status !== "open" || r.openMs == null || !d || d.minutes == null) return null;
     var now = state.now;
     var ready = now + (PREP_MIN + d.minutes + GEAR_MIN) * MIN;
-    for (var day = dayStart(now), i = 0; day <= r.endMs && i < 4; day += DAY, i++) {
+    var first = dayStart(now) + (tryTomorrow(r) ? DAY : 0);
+    for (var day = first, i = 0; day <= r.endMs && i < 4; day += DAY, i++) {
       if (ready < day + r.closeMs) return Math.max(ready, day + r.openMs) + LIFT_MIN * MIN - now;
     }
     return null;
   }
 
-  // Bedtime mode: from when the last resort's lifts stop for the day (daytime schedule) until
-  // midnight. Uses the resorts in season today, or all resorts off-season.
-  function isBedtime() {
-    var withHours = resortsWhere(function (r) { return r.closeMs != null; });
-    var pool = withHours.filter(hasStatus("open"));
-    if (!pool.length) pool = withHours;
-    if (!pool.length) return false;
-    var lastClose = Math.max.apply(null, pool.map(function (r) { return r.closeMs; }));
-    return state.now - dayStart(state.now) >= lastClose;
+  // "Try tomorrow" mode, per resort: from TOMORROW_MIN before its lift closing until midnight,
+  // as long as the season is still on tomorrow. The day plan then targets tomorrow.
+  function tryTomorrow(r) {
+    if (r.status !== "open" || r.closeMs == null) return false;
+    var today = dayStart(state.now);
+    return state.now - today >= r.closeMs - TOMORROW_MIN * MIN && today + DAY <= r.endMs;
   }
 
   // The day plan, worked back from the moment on the slope:
   // go to bed -> sleep -> wake up -> get ready -> start driving -> drive -> gear up -> lift -> on the slope.
-  // Bedtime and wake-up are only part of it in bedtime mode, for a ski day tomorrow.
+  // Bedtime and wake-up are only part of it in "try tomorrow" mode, for a ski day tomorrow.
   function tripPlan(r) {
     var slopeIn = timeToSlope(r);
     if (slopeIn == null) return null;
     var drive = Math.round(distanceTo(r).minutes);   // whole minutes, as displayed
     var plan = { slopeIn: slopeIn, slopeAt: state.now + slopeIn, drive: drive };
     plan.driveAt = plan.slopeAt - (LIFT_MIN + GEAR_MIN + drive) * MIN;
-    if (isBedtime() && dayStart(plan.slopeAt) === dayStart(state.now) + DAY) {
+    if (tryTomorrow(r) && dayStart(plan.slopeAt) === dayStart(state.now) + DAY) {
       plan.wakeAt = plan.driveAt - PREP_MIN * MIN;
       plan.bedAt = plan.wakeAt - SLEEP_MIN * MIN;
     }
     return plan;
   }
+
+  // #region Weather (Open-Meteo)
+  // Fetches the forecast for every resort in one request and stores, per resort id:
+  // { now: temperature right now, days: { "2026-12-20": { code, max, min, snow, uv, noon } } }.
+  function fetchWeather() {
+    var url = WEATHER_URL +
+      "&latitude=" + resorts.map(function (r) { return r.lat.toFixed(4); }).join(",") +
+      "&longitude=" + resorts.map(function (r) { return r.lon.toFixed(4); }).join(",");
+    return fetch(url)
+      .then(function (res) { if (!res.ok) throw new Error("weather " + res.status); return res.json(); })
+      .then(function (list) {
+        var weather = {};
+        (Array.isArray(list) ? list : [list]).forEach(function (w, i) {
+          var days = {};
+          w.daily.time.forEach(function (day, d) {
+            var noon = w.hourly.time.indexOf(day + "T12:00");
+            days[day] = {
+              code: w.daily.weather_code[d],
+              max: w.daily.temperature_2m_max[d],
+              min: w.daily.temperature_2m_min[d],
+              snow: w.daily.snowfall_sum[d] || 0,
+              uv: w.daily.uv_index_max[d],
+              noon: noon >= 0 ? w.hourly.temperature_2m[noon] : null
+            };
+          });
+          weather[resorts[i].id] = { now: w.current.temperature_2m, days: days };
+        });
+        state.weather = weather;
+        render();
+        // The welcome screen opens before the forecast arrives: add the powder section now, or
+        // open the screen for fresh powder alone if there was no season-opening news today.
+        if (byId("welcome").open) renderPowderSection(); else showWelcome();
+      })
+      .catch(function () { /* weather unavailable: the site simply shows none */ });
+  }
+
+  // Sunny, snowy or cloudy from a WMO weather code (rain, fog and storms count as cloudy).
+  function weatherKind(code) {
+    if (code <= 1) return "sunny";
+    if ((code >= 71 && code <= 77) || code === 85 || code === 86) return "snowy";
+    return "cloudy";
+  }
+  var WEATHER_LABEL = { sunny: "Sunny", snowy: "Snowy", cloudy: "Cloudy" };
+
+  // Short description of a WMO weather code.
+  function weatherText(code) {
+    if (code === 0) return "Clear sky";
+    if (code === 1) return "Mainly sunny";
+    if (code === 2) return "Partly cloudy";
+    if (code === 3) return "Overcast";
+    if (code === 45 || code === 48) return "Fog";
+    if (code >= 51 && code <= 57) return "Drizzle";
+    if (code >= 61 && code <= 67) return "Rain";
+    if (code >= 71 && code <= 77) return "Snowfall";
+    if (code >= 80 && code <= 82) return "Rain showers";
+    if (code === 85 || code === 86) return "Snow showers";
+    return "Thunderstorms";
+  }
+
+  // The weather that matters for a resort, or null: only while its season is open. Today's weather
+  // until 1 hour before its lifts close (TOMORROW_MIN), then tomorrow's (if the season goes on).
+  function weatherFor(r) {
+    if (r.status !== "open" || !state.weather || !state.weather[r.id]) return null;
+    var today = dayStart(state.now);
+    var lateToday = r.closeMs != null && state.now - today >= r.closeMs - TOMORROW_MIN * MIN;
+    if (lateToday && today + DAY > r.endMs) return null;
+    var day = lateToday ? today + DAY : today;
+    var d = state.weather[r.id].days[isoDay(day)];
+    if (!d) return null;
+    return {
+      tomorrow: lateToday,
+      kind: weatherKind(d.code),
+      text: weatherText(d.code),
+      temp: lateToday ? d.noon : state.weather[r.id].now,
+      max: d.max, min: d.min,
+      snow: d.snow, fresh: d.snow >= FRESH_SNOW_CM,
+      uv: d.uv
+    };
+  }
+  // #endregion
 
   // The earliest upcoming season start and every resort opening on that day, or null.
   function nextOpening() {
@@ -323,6 +432,9 @@
   // #endregion
 
   // #region DOM helpers
+  // True on phone-sized screens, where the map sits above the sidebar (matches the CSS breakpoint).
+  function isNarrow() { return window.matchMedia("(max-width: 800px)").matches; }
+
   // Element by id.
   function byId(id) { return document.getElementById(id); }
 
@@ -330,6 +442,10 @@
   var dom = {
     typeChips: byId("type-chips"),
     statusChips: byId("status-chips"),
+    openingChips: byId("opening-chips"),
+    openingHeading: byId("opening-heading"),
+    weatherChips: byId("weather-chips"),
+    weatherHeading: byId("weather-heading"),
     valley: byId("valley-select"),
     search: byId("search-input"),
     list: byId("resort-list"),
@@ -387,6 +503,13 @@
   // Flame pill for resorts that opened in the last NEW_DAYS days.
   function firePill(r) { return withIcon(el("span", "pill fire"), ICON.flame, r.openedToday ? "Opened today" : "Recently opened"); }
 
+  // Flame pill for resorts whose season starts tomorrow.
+  function tomorrowPill() { return withIcon(el("span", "pill fire"), ICON.flame, "Opens tomorrow"); }
+
+  // Fire highlight (badge, warm row) for resorts that recently opened or open tomorrow.
+  function isHot(r) { return r.isNew || r.opensTomorrow; }
+  function hotPill(r) { return r.isNew ? firePill(r) : r.opensTomorrow ? tomorrowPill() : null; }
+
   // "Last days · 3 days left" pill near the season end.
   function lastDaysPill(r) {
     return el("span", "pill last", "Last days · " + r.lastDays + (r.lastDays === 1 ? " day left" : " days left"));
@@ -420,12 +543,24 @@
     return wrap;
   }
 
-  // Colored banner: icon + label and an optional note on the left, optional countdown tiles on the right.
-  function hero(kind, label, ms, note) {
+  // Exact time at the right edge of a details element: day on top ("today", "tomorrow" or a date),
+  // clock below. The column has a fixed width, so the times of stacked elements line up.
+  function timeColumn(ms) {
+    var days = Math.round((dayStart(ms) - dayStart(state.now)) / DAY);
+    var day = days === 0 ? "today" : days === 1 ? "tomorrow" : fmtDate(ms);
+    var clock = append(el("div", "when-time"), el("span", "at", "at"), el("b", null, fmtClock(ms)));
+    return append(el("div", "when"), el("small", null, day), clock);
+  }
+
+  // Colored banner: icon + label and an optional note on the left, then optional countdown tiles,
+  // then the optional exact time (at) in the right-hand time column.
+  function hero(kind, label, ms, note, at) {
     var heading = el("div", "hero-label");
     if (HERO_ICON[kind]) withIcon(heading, HERO_ICON[kind], label); else heading.textContent = label;
     var text = append(el("div", "hero-text"), heading, note ? el("div", "hero-note", note) : null);
-    return append(el("div", "hero " + kind), text, ms != null ? countdownTiles(ms) : null);
+    return append(el("div", "hero " + kind), text,
+      ms != null ? countdownTiles(ms) : null,
+      at != null ? timeColumn(at) : null);
   }
   // #endregion
 
@@ -480,11 +615,13 @@
   var focusToken = 0;                             // cancels a pending "open details" when bumped
 
   // Round map pin: badge with icon, optional status dot, optional ember glow.
-  function pinIcon(cls, svg, status, isNew) {
+  // Map pin: lift badge, season status dot and, for open resorts, a weather icon (wx).
+  function pinIcon(cls, svg, status, isNew, wx) {
     return L.divIcon({
       className: "",
       html: '<div class="badge ' + cls + (isNew ? " is-new" : "") + '">' + svg +
-        (status ? '<i class="dot ' + status + '"></i>' : "") + "</div>",
+        (status ? '<i class="dot ' + status + '"></i>' : "") +
+        (wx ? '<i class="wx-pin ' + wx + '">' + ICON[wx] + "</i>" : "") + "</div>",
       iconSize: [34, 34],
       iconAnchor: [17, 17],
       popupAnchor: [0, -16]
@@ -492,11 +629,16 @@
   }
 
   // A resort's pin icon for its current status.
-  function resortIcon(r) { return pinIcon(r.type, ICON[r.type], r.status, r.isNew); }
+  function resortIcon(r) { var w = weatherFor(r); return pinIcon(r.type, ICON[r.type], r.status, r.isNew, w && w.kind); }
   // What the pin icon depends on; the pin is redrawn when this changes.
-  function pinState(r) { return r.status + r.isNew; }
+  function pinState(r) { var w = weatherFor(r); return r.status + r.isNew + (w ? w.kind : ""); }
 
   // Creates one pin per resort, with the details popup bound to it.
+  // Details card width: roomy on desktop, narrower when the map itself is narrow (phones).
+  var popupWidth = Math.max(260, Math.min(380, map.getSize().x - 60));
+  // Cap on the map popup height (desktop popups are short enough; phones use the details sheet).
+  var popupMaxHeight = null;
+
   function createMarkers() {
     resorts.forEach(function (r) {
       r.drawnPin = pinState(r);
@@ -505,15 +647,48 @@
         title: r.name,
         alt: TYPE_LABEL[r.type] + ": " + r.name
       });
-      r.marker.bindPopup(function () { return popupFor(r); }, { minWidth: 290, maxWidth: 340 });
+      r.marker.bindPopup(function () { return popupFor(r); }, { minWidth: popupWidth, maxWidth: popupWidth, maxHeight: popupMaxHeight });
+      // Phones: a tapped pin opens the full-screen details sheet instead of the map popup.
+      r.marker.on("popupopen", function () {
+        if (!isNarrow()) return;
+        r.marker.closePopup();
+        openSheet(r);
+      });
     });
   }
+
+  // #region Details sheet (phones)
+  // On phones the details open in a full-screen sheet above everything, instead of a map popup.
+  var sheet = { dialog: byId("details-sheet"), body: byId("sheet-body"), resort: null };
+
+  // Shows a resort's details in the sheet (content is the same as the desktop map popup).
+  function openSheet(r) {
+    sheet.resort = r;
+    sheet.body.replaceChildren(popupFor(r));
+    sheet.body.scrollTop = 0;
+    if (!sheet.dialog.open) sheet.dialog.showModal();
+  }
+
+  // Rebuilds the open sheet for the periodic refresh, keeping its scroll position.
+  function refreshSheet() {
+    if (!sheet.dialog.open || !sheet.resort) return;
+    var top = sheet.body.scrollTop;
+    sheet.body.replaceChildren(popupFor(sheet.resort));
+    sheet.body.scrollTop = top;
+  }
+
+  byId("sheet-close").addEventListener("click", function () { sheet.dialog.close(); });
+  // A tap on the dimmed area around the sheet closes it too.
+  sheet.dialog.addEventListener("click", function (ev) { if (ev.target === sheet.dialog) sheet.dialog.close(); });
+  sheet.dialog.addEventListener("close", function () { sheet.resort = null; });
+  // #endregion
 
   // Shows only the visible resorts' pins, refreshes changed icons and any open details.
   // Only what changed is touched, so an open details popup survives the periodic refresh.
   function syncMarkers(visible) {
     resorts.forEach(function (r) {
       if (r.marker.isPopupOpen()) r.marker.getPopup().update();
+      if (sheet.resort === r) refreshSheet();
       if (r.drawnPin !== pinState(r)) {
         r.drawnPin = pinState(r);
         r.marker.setIcon(resortIcon(r));
@@ -534,6 +709,16 @@
   // Loosens any filter that hides the resort, then flies to it and opens its details.
   function focusResort(r) {
     revealResort(r);
+    // Phones: scroll the page back to the top, centre the map on the resort behind the sheet,
+    // and open the full-screen details sheet.
+    if (isNarrow()) {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      focusToken++;
+      map.closePopup();
+      map.setView([r.pinLat, r.pinLon], Math.max(map.getZoom(), 13), { animate: false });
+      openSheet(r);
+      return;
+    }
     // Open the details once the map has arrived, so the popup can pan itself fully into view.
     var token = ++focusToken;
     var open = function () { if (token === focusToken && !r.marker.isPopupOpen()) r.marker.openPopup(); };
@@ -550,6 +735,8 @@
     if (state.status !== "all" && state.status !== r.status) state.status = "all";
     if (state.valley !== "all" && state.valley !== r.valley) { state.valley = "all"; dom.valley.value = "all"; }
     if (state.search && r.searchName.indexOf(state.search) < 0) { state.search = ""; dom.search.value = ""; }
+    if (state.opening && !OPENING[state.opening].test(r)) state.opening = null;
+    if (state.wxFilter && !WX[state.wxFilter].test(r)) state.wxFilter = null;
     render();
   }
   // #endregion
@@ -610,11 +797,13 @@
   // #endregion
 
   // #region Resort details popup
-  // One step of the day plan: icon + label on the left, clock time on the right.
-  function planStep(kind, svg, label, ms) {
+  // One step of the day plan, read as "Wake up in | 7 hours 30 min | at 07:00":
+  // icon + action on the left, countdown in the middle, exact time on the right.
+  function planStep(kind, svg, action, ms) {
     var step = el("div", "plan-step " + kind);
-    withIcon(step.appendChild(el("span", "plan-label")), svg, label);
-    return append(step, el("b", "plan-time", whenText(ms)));
+    var left = ms - state.now;
+    withIcon(step.appendChild(el("span", "plan-label")), svg, left > 0 ? action + " in" : action);
+    return append(step, left > 0 ? countdownTiles(left) : null, timeColumn(ms));
   }
 
   // Dashed connector between two steps, e.g. "sleep 8 h".
@@ -624,27 +813,27 @@
   function bedtimeCard(plan) {
     var left = plan.bedAt - state.now;
     var card = left > 0
-      ? hero("night", "Go to bed in", left, "Lights out at " + fmtClock(plan.bedAt))
-      : hero("night", "Time for bed!", null, "Bedtime was " + fmtClock(plan.bedAt) + " · sleep now");
+      ? hero("night", "Go to bed in", left, null, plan.bedAt)
+      : hero("night", "Time for bed!", null, "past bedtime · sleep now", plan.bedAt);
     return append(card, el("span", "moon"));
   }
 
   // "On the slope in" banner with countdown, first-turn time and a hype tag.
   function slopeCard(plan) {
-    var card = hero("slope", "On the slope in", plan.slopeIn, "first turns at " + whenText(plan.slopeAt));
+    var card = hero("slope", "On the slope in", plan.slopeIn, null, plan.slopeAt);
     var hype = plan.slopeIn < 2 * HOUR ? "Go go go!" : plan.slopeIn < 4 * HOUR ? "Gear up!" : "Fresh tracks await";
-    card.querySelector(".hero-text").appendChild(el("div", "hype-tag", hype));
+    card.appendChild(el("div", "hype-tag", hype));   // own full-width row under the banner line
     return card;
   }
 
-  // Go to bed -> Wake up at -> Start driving -> On the slope (bed and wake-up only in bedtime mode).
+  // Go to bed -> Wake up -> Start driving -> On the slope (bed and wake-up only in bedtime mode).
   function planNode(plan) {
     var wrap = el("div", "plan");
     if (plan.bedAt != null) {
       append(wrap,
         bedtimeCard(plan),
         planGap("sleep " + formatDuration(SLEEP_MIN)),
-        planStep("wake", ICON.alarm, "Wake up at", plan.wakeAt));
+        planStep("wake", ICON.alarm, "Wake up", plan.wakeAt));
     }
     return append(wrap,
       planGap("get ready " + formatDuration(PREP_MIN)),
@@ -656,12 +845,21 @@
   // Top of the details by season: opening countdown, day plan while open, goodbye after the season.
   function seasonBanner(r) {
     if (r.status === "prep") {
-      return hero("opens", "Season opens in", r.opensIn,
-        fmtDate(r.startMs) + (r.open ? " at " + r.open : "") + (r.startEstimated ? " · expected" : ""));
+      var note = r.startEstimated ? "expected date" : r.open ? null : fmtDate(r.startMs);
+      return hero("opens", "Season opens in", r.opensIn, note, r.open ? r.startMs + r.openMs : null);
     }
     if (r.status === "ended") return hero("ended", "See you next season!", null, null);
     var plan = tripPlan(r);
-    return plan ? planNode(plan) : null;
+    var planEl = plan ? planNode(plan) : null;
+    // The banner only shows in the last TOMORROW_MIN before closing; the plan for tomorrow stays after that.
+    var lastHour = tryTomorrow(r) && state.now - dayStart(state.now) < r.closeMs;
+    if (!lastHour) return planEl;
+    return append(el("div", "plan-wrap"), tomorrowCard(r), planEl);
+  }
+
+  // "Try tomorrow!" banner while the lifts are in their last TOMORROW_MIN: too late for a ski day today.
+  function tomorrowCard(r) {
+    return hero("tomorrow", "Try tomorrow!", null, "Lifts close at " + r.close + " · too late for today");
   }
 
   // Small chip next to the lift hours: "start in 2h 30m" or "running now".
@@ -714,20 +912,78 @@
     return state.home ? null : el("p", "route-hint", "Enter your home address under “Distance from home” to see directions.");
   }
 
+  // Phones only (shown by CSS instead of "Show directions"): opens Google Maps (the app on Android,
+  // the app or website on iPhone) with driving directions from the phone's location to the resort.
+  // Only the resort's coordinates go into the link.
+  function googleMapsButton(r) {
+    var link = el("a", "route-btn gmaps-btn");
+    link.href = GMAPS_DIR_URL + r.lat + "," + r.lon + "&travelmode=driving";
+    link.target = "_blank";
+    link.rel = "noopener";
+    return withIcon(link, ICON.car, "Navigate with Google Maps");
+  }
+
+  // "-3°", or "–" when unknown.
+  function fmtTemp(t) { return t == null ? "–" : Math.round(t) + "°"; }
+
+  // Weather card (open resorts only): icon and description, temperature (now, or at noon
+  // tomorrow) with high and low, whether fresh snow is coming, and the UV index when sunny.
+  function weatherCard(r) {
+    var w = weatherFor(r);
+    if (!w) return null;
+    var icon = el("span", "wx-icon");
+    icon.innerHTML = ICON[w.kind];
+    var head = append(el("div", "wx-head"),
+      icon,
+      append(el("div", "wx-what"),
+        el("div", "wx-when", w.tomorrow ? "Tomorrow's weather" : "Today's weather"),
+        el("div", "wx-text", w.text)),
+      append(el("div", "wx-temps"),
+        append(el("div", "wx-now"), el("b", null, fmtTemp(w.temp)), el("small", null, w.tomorrow ? "at noon" : "now")),
+        el("div", "wx-range", "H " + fmtTemp(w.max) + " · L " + fmtTemp(w.min))));
+    var day = w.tomorrow ? "tomorrow" : "today";
+    var snow = w.fresh
+      ? withIcon(el("div", "wx-line powder"), ICON.snowy, "Fresh snow " + day + ": " + Math.round(w.snow) + " cm")
+      : el("div", "wx-line", w.snow > 0 ? "Only a light dusting of snow " + day + " (under 1 cm)" : "No fresh snow expected " + day);
+    var uv = null;
+    if (w.kind === "sunny" && w.uv != null) {
+      var high = w.uv >= UV_HIGH;
+      uv = withIcon(el("div", "wx-line uv" + (high ? " high" : "")), ICON.sunny,
+        "UV index " + Math.round(w.uv) + (high ? " · High UV! Sunscreen and sunglasses" : ""));
+    }
+    var credit = el("a", "wx-credit", "Weather data by Open-Meteo.com");
+    credit.href = "https://open-meteo.com/";
+    credit.target = "_blank";
+    credit.rel = "noopener";
+    return append(el("div", "wx " + w.kind), head, snow, uv, credit);
+  }
+
+  // Small weather icon (sunny, snowy or cloudy) for list rows, or null without weather.
+  function weatherMini(r) {
+    var w = weatherFor(r);
+    if (!w) return null;
+    var icon = el("span", "wx-mini " + w.kind);
+    icon.innerHTML = ICON[w.kind];
+    icon.title = WEATHER_LABEL[w.kind] + (w.tomorrow ? " tomorrow" : " today") + (w.fresh ? " · fresh snow" : "");
+    return icon;
+  }
+
   // Full details of a resort, shown when its row or pin is clicked.
   function popupFor(r) {
     var pills = append(el("div", "pills"),
       statusPill(r),
       typeTag(r),
-      r.isNew ? firePill(r) : null,
+      hotPill(r),
       r.lastDays ? lastDaysPill(r) : null);
     return append(el("div", "popup"),
       el("h3", null, r.name),
       pills,
       seasonBanner(r),
+      weatherCard(r),
       factList(r),
-      directionsButton(r),
-      directionsHint());
+      // Desktop: route line on this map. Phones: hand over to Google Maps (CSS shows one or the other).
+      append(el("div", "desktop-only"), directionsButton(r), directionsHint()),
+      googleMapsButton(r));
   }
   // #endregion
 
@@ -735,6 +991,15 @@
   var typeButtons = {};     // lift type -> its chip
   var statusButtons = {};   // "all" or status -> its chip
   var allTypesButton;       // "Show all" / "Showing all" chip
+  var openingButtons = {};  // "today" / "tomorrow" / "weekend" -> its chip
+
+  // Season-opening filters (real start dates only). A button only shows while it has resorts.
+  var OPENING_KEYS = ["today", "tomorrow", "weekend"];
+  var OPENING = {
+    today: { label: "Opened today", test: function (r) { return r.openedToday; } },
+    tomorrow: { label: "Opens tomorrow", test: function (r) { return r.opensTomorrow; } },
+    weekend: { label: "Opens this weekend", test: function (r) { return r.opensWeekend; } }
+  };
 
   // Lift type chips (toggle each type) plus a "Show all" chip.
   function buildTypeChips() {
@@ -760,13 +1025,56 @@
   // Season status chips: All, Season open, In preparation, Season ended (counts filled in by render).
   function buildStatusChips() {
     ["all"].concat(STATUS_KEYS).forEach(function (key) {
-      var btn = button("chip chip-status", null, function () { state.status = key; render(); });
+      // Like the valley dropdown, the map then zooms to the resorts that pass the filters.
+      var btn = button("chip chip-status", null, function () { state.status = key; render(); fitToVisible(); });
       append(btn,
         key !== "all" ? el("i", "dot " + key) : null,
         el("span", null, key === "all" ? "All" : STATUS[key]),
         el("small"));
       statusButtons[key] = btn;
       dom.statusChips.appendChild(btn);
+    });
+  }
+
+  // Weather filters (open resorts with a forecast). A button only shows while it has resorts.
+  var weatherButtons = {};
+  var WX_KEYS = ["sunny", "powder"];
+  var WX = {
+    sunny: { label: "Sunny", icon: ICON.sunny, test: function (r) { var w = weatherFor(r); return !!w && w.kind === "sunny"; } },
+    powder: { label: "Fresh powder", icon: ICON.snowy, test: function (r) { var w = weatherFor(r); return !!w && w.fresh; } }
+  };
+
+  // Weather chips: pressing one shows only those resorts (all lift types and statuses) and zooms
+  // the map to them; pressing it again (or the other one) switches it off.
+  function buildWeatherChips() {
+    WX_KEYS.forEach(function (key) {
+      var btn = button("chip chip-weather " + key, null, function () {
+        state.wxFilter = state.wxFilter === key ? null : key;
+        if (state.wxFilter) { state.types = new Set(TYPE_KEYS); state.status = "all"; }
+        render();
+        fitToVisible();
+      });
+      withIcon(btn, WX[key].icon, WX[key].label);
+      btn.appendChild(el("small"));
+      weatherButtons[key] = btn;
+      dom.weatherChips.appendChild(btn);
+    });
+  }
+
+  // Season-opening chips with a flame. Pressing one shows only those resorts, across every lift
+  // type and season status; pressing it again (or another one) switches it off.
+  function buildOpeningChips() {
+    OPENING_KEYS.forEach(function (key) {
+      var btn = button("chip chip-opening", null, function () {
+        state.opening = state.opening === key ? null : key;
+        if (state.opening) { state.types = new Set(TYPE_KEYS); state.status = "all"; }
+        render();
+        fitToVisible();   // zoom to the matching resorts (or back to all of them when switched off)
+      });
+      withIcon(btn, ICON.flame, OPENING[key].label);
+      btn.appendChild(el("small"));
+      openingButtons[key] = btn;
+      dom.openingChips.appendChild(btn);
     });
   }
 
@@ -805,6 +1113,30 @@
       statusButtons[key].setAttribute("aria-pressed", String(state.status === key));
       statusButtons[key].lastChild.textContent = " (" + n + ")";
     });
+
+    // Opening chips: hidden without resorts (an active one then switches off), heading hidden with them.
+    var anyOpening = false;
+    OPENING_KEYS.forEach(function (key) {
+      var n = countWhere(OPENING[key].test);
+      if (!n && state.opening === key) state.opening = null;
+      openingButtons[key].hidden = !n;
+      openingButtons[key].setAttribute("aria-pressed", String(state.opening === key));
+      openingButtons[key].lastChild.textContent = " (" + n + ")";
+      anyOpening = anyOpening || n > 0;
+    });
+    dom.openingHeading.hidden = !anyOpening;
+
+    // Weather chips: same rule, hidden without resorts (an active one then switches off).
+    var anyWeather = false;
+    WX_KEYS.forEach(function (key) {
+      var n = countWhere(WX[key].test);
+      if (!n && state.wxFilter === key) state.wxFilter = null;
+      weatherButtons[key].hidden = !n;
+      weatherButtons[key].setAttribute("aria-pressed", String(state.wxFilter === key));
+      weatherButtons[key].lastChild.textContent = " (" + n + ")";
+      anyWeather = anyWeather || n > 0;
+    });
+    dom.weatherHeading.hidden = !anyWeather;
   }
   // #endregion
 
@@ -833,15 +1165,16 @@
 
     var labels = append(el("div", "row-status"),
       statusPill(r),
-      r.isNew ? firePill(r) : null,
+      hotPill(r),
       r.lastDays ? lastDaysPill(r) : null,
       rowTimer(r),
       parkingLabel(r, true));
-    var body = append(el("span", "body"), el("div", "name", r.name), labels);
+    var name = append(el("div", "name"), document.createTextNode(r.name + " "), weatherMini(r));
+    var body = append(el("span", "body"), name, labels);
 
     var btn = button("resort", null, function () { focusResort(r); });
     btn.title = "Show details";
-    if (r.isNew) btn.classList.add("is-new");
+    if (isHot(r)) btn.classList.add("is-new");
     append(btn, badge, body, distanceLabel(distanceTo(r)));
     return append(document.createElement("li"), btn);
   }
@@ -889,7 +1222,9 @@
     return state.types.has(r.type) &&
       (state.status === "all" || r.status === state.status) &&
       (state.valley === "all" || r.valley === state.valley) &&
-      (!state.search || r.searchName.indexOf(state.search) >= 0);
+      (!state.search || r.searchName.indexOf(state.search) >= 0) &&
+      (!state.opening || OPENING[state.opening].test(r)) &&
+      (!state.wxFilter || WX[state.wxFilter].test(r));
   }
 
   // Resorts that pass the filters, sorted by distance once a home address is set.
@@ -926,6 +1261,13 @@
   function welcomeContent() {
     var today = dayStart(state.now);
     var openedToday = resortsWhere(function (r) { return r.startMs === today; });
+    var tomorrowList = resortsWhere(function (r) { return r.opensTomorrow; });
+    // Fire-highlighted entry for a resort whose season starts tomorrow.
+    function tomorrowEntry(r) {
+      var bits = [r.valley, "in " + fmtCountdown(r.opensIn)];
+      if (hoursText(r)) bits.push("lifts " + hoursText(r));
+      return { r: r, text: bits.join(" · "), hot: true };
+    }
     if (openedToday.length) {
       return {
         kicker: "Today",
@@ -942,11 +1284,27 @@
           if (hoursText(r)) bits.push("lifts " + hoursText(r));
           if (r.startEstimated) bits.push("expected date");
           return { r: r, text: bits.join(" · ") };
-        })
+        }),
+        // Tomorrow's openings follow below today's, highlighted with fire.
+        extraTitle: tomorrowList.length ? "Opening tomorrow" : null,
+        extra: tomorrowList.map(tomorrowEntry)
       };
     }
     var next = nextOpening();
     if (!next) return null;
+    if (tomorrowList.length && next.dateMs === today + DAY) {
+      return {
+        kicker: "Tomorrow",
+        title: "Opening tomorrow!",
+        sub: (tomorrowList.length === 1 ? "One resort starts" : tomorrowList.length + " resorts start") +
+          " the season tomorrow, " + fmtDate(today + DAY) + ". Set your alarm!",
+        countLabel: "Countdown to the first lift",
+        liveText: "Opening now!",
+        target: earliest(tomorrowList, function (r) { return r.startMs + (r.openMs || 0); }),
+        entries: tomorrowList.map(tomorrowEntry),
+        hot: true
+      };
+    }
     return {
       kicker: "Coming up",
       title: "Next opening",
@@ -960,15 +1318,77 @@
     };
   }
 
+  // Fresh snow (FRESH_SNOW_CM or more) for an open resort today and/or tomorrow, e.g.
+  // [{ day: "today", cm: 15 }], from the Open-Meteo forecast. Tomorrow only while the season goes on.
+  function powderDays(r) {
+    if (r.status !== "open" || !state.weather || !state.weather[r.id]) return [];
+    var today = dayStart(state.now);
+    var days = state.weather[r.id].days;
+    var out = [];
+    [["today", today], ["tomorrow", today + DAY]].forEach(function (p) {
+      var d = days[isoDay(p[1])];
+      if (d && d.snow >= FRESH_SNOW_CM && p[1] <= r.endMs) out.push({ day: p[0], cm: Math.round(d.snow) });
+    });
+    return out;
+  }
+
+  // Welcome entries for every resort with fresh powder today or tomorrow, most snow first.
+  function powderEntries() {
+    return resorts
+      .map(function (r) { return { r: r, days: powderDays(r) }; })
+      .filter(function (p) { return p.days.length; })
+      .sort(function (a, b) {
+        var sum = function (p) { return p.days.reduce(function (s, d) { return s + d.cm; }, 0); };
+        return sum(b) - sum(a);
+      })
+      .map(function (p) {
+        var snow = p.days.map(function (d) { return d.cm + " cm " + d.day; }).join(" · ");
+        return { r: p.r, text: p.r.valley + " · " + snow, powder: true };
+      });
+  }
+
+  // Adds (or refreshes) the "Fresh powder" section at the end of the welcome list.
+  function renderPowderSection() {
+    var dialog = byId("welcome");
+    var list = byId("welcome-list");
+    list.querySelectorAll(".powder-item").forEach(function (li) { li.remove(); });
+    var entries = powderEntries();
+    if (!entries.length) return;
+    var heading = withIcon(el("li", "welcome-section powder-section powder-item"), ICON.snowy, "Fresh powder today & tomorrow");
+    list.appendChild(heading);
+    entries.forEach(function (entry) {
+      var li = welcomeEntry(entry, dialog);
+      li.classList.add("powder-item");
+      list.appendChild(li);
+    });
+  }
+
+  // Welcome screen just for fresh powder, on days without season-opening news.
+  function powderOnlyContent() {
+    var n = powderEntries().length;
+    if (!n) return null;
+    return {
+      kicker: "Snow alert",
+      title: "Fresh powder!",
+      sub: (n === 1 ? "One open resort gets" : n + " open resorts get") + " fresh snow today or tomorrow.",
+      target: null,
+      entries: []
+    };
+  }
+
   // Smallest value of fn over a list, or null for an empty list.
   function earliest(list, fn) {
     return list.reduce(function (min, item) { var t = fn(item); return min == null || t < min ? t : min; }, null);
   }
 
   // Clickable resort card in the welcome list; closes the dialog and opens the resort.
+  // Tomorrow's openings (entry.hot) get a fiery card with an "Opens tomorrow" flame pill.
   function welcomeEntry(entry, dialog) {
-    var body = append(el("span"), el("strong", null, entry.r.name), el("small", null, entry.text));
-    var btn = button("welcome-resort", null, function () { dialog.close(); focusResort(entry.r); });
+    var name = append(el("strong"), document.createTextNode(entry.r.name),
+      entry.hot ? tomorrowPill() : null,
+      entry.powder ? withIcon(el("span", "pill powder"), ICON.snowy, "Fresh powder") : null);
+    var body = append(el("span"), name, el("small", null, entry.text));
+    var btn = button("welcome-resort" + (entry.hot ? " hot" : "") + (entry.powder ? " powder" : ""), null, function () { dialog.close(); focusResort(entry.r); });
     return append(document.createElement("li"), append(btn, liftBadge(entry.r.type), body));
   }
 
@@ -1009,7 +1429,7 @@
     if (!dialog.showModal) return;
     var todayKey = isoDay(state.now);
     if (storageGet(STORE_WELCOME) === todayKey) return;
-    var content = welcomeContent();
+    var content = welcomeContent() || powderOnlyContent();
     if (!content) return;
 
     byId("welcome-kicker").textContent = content.kicker;
@@ -1018,6 +1438,12 @@
     var list = byId("welcome-list");
     list.textContent = "";
     content.entries.forEach(function (entry) { list.appendChild(welcomeEntry(entry, dialog)); });
+    if (content.extraTitle) {
+      list.appendChild(withIcon(el("li", "welcome-section"), ICON.flame, content.extraTitle));
+      content.extra.forEach(function (entry) { list.appendChild(welcomeEntry(entry, dialog)); });
+    }
+    renderPowderSection();
+    dialog.classList.toggle("hot", !!content.hot);
 
     var closeBtn = byId("welcome-close");
     closeBtn.onclick = function () { dialog.close(); };
@@ -1187,6 +1613,8 @@
   createMarkers();
   buildTypeChips();
   buildStatusChips();
+  buildOpeningChips();
+  buildWeatherChips();
   buildValleySelect();
   bindSearch();
   dom.homeForm.addEventListener("submit", onHomeSubmit);
@@ -1199,5 +1627,8 @@
 
   // Keep statuses, timers and countdowns current.
   setInterval(render, REFRESH_MS);
+  // Weather for every resort from Open-Meteo, refreshed every half hour.
+  fetchWeather();
+  setInterval(fetchWeather, WEATHER_REFRESH_MS);
   // #endregion
 })();
