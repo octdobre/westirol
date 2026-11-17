@@ -1,10 +1,15 @@
 /* West Tirol Ski Resorts — stylesheet.
-   Regions run top to bottom: tokens, base, page frame, sidebar controls, resort list,
-   shared labels, map details popup, day plan, welcome screen, effects, then media overrides. */
+   Regions run top to bottom: tokens, base, header, layout, highlights, filter controls, home form, search,
+   resort list, badges, labels, resort details card, hero banners, day plan, on-the-slope hype, fire effects,
+   weather, details panel (desktop), details sheet (phones), compact details, welcome screen and map fallback.
+   The phone layout and reduced motion come last, because they override the rules above.
+   The resort details card has the class .popup (the home pin's map popup uses it too). */
 
 /* #region Design tokens */
 /* Colors and shared sizes used throughout the page. */
 :root {
+  color-scheme: light;
+
   /* Text and surfaces */
   --ink: #12314f;
   --ink-soft: #4a6580;
@@ -15,6 +20,8 @@
   --sky-top: #0e3a66;
   --sky-bottom: #3f8fc9;
   --accent: #1d6fb8;
+  --focus-ring: #7fb8e6;
+  --error: #b3261e;
 
   /* Lift types and the home pin */
   --gondola: #1d5fa8;
@@ -28,15 +35,38 @@
   --ended: #6b7c8c;
   --last: #c2410c;
 
+  /* Weather: warm sun, icy snow, grey cloud */
+  --wx-sunny: #f59e0b;
+  --wx-snowy: #3b82c4;
+  --wx-cloudy: #6b7c8c;
+
+  /* Recurring gradients: fire (recently opened, opens tomorrow), fresh powder, call to action */
+  --fire-gradient: linear-gradient(120deg, #d9480f, #c81e1e);
+  --powder-gradient: linear-gradient(120deg, #2563a8, #3b82c4);
+  --cta-gradient: linear-gradient(135deg, #d9482b, #c7305d);
+
   --radius: 12px;
 }
 /* #endregion */
 
 /* #region Base */
-/* Box model, full-height page and form defaults. */
-* { box-sizing: border-box; }
+/* Box model, full-height page, form defaults and the shared focus ring. */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
 
-html, body { height: 100%; margin: 0; }
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+}
 
 body {
   display: flex;
@@ -46,11 +76,31 @@ body {
   background: var(--snow);
 }
 
-/* Form controls use the page font. */
-select, input[type="text"], button { font: inherit; }
+/* The hidden attribute always wins, also over components that set their own display. */
+[hidden] {
+  display: none !important;
+}
+
+/* Form controls use the page font (16px text fields also keep iOS from zooming in on focus). */
+button,
+input,
+select {
+  font: inherit;
+}
 
 /* One focus ring for every interactive control. */
-:is(button, select, input):focus-visible { outline: 3px solid #7fb8e6; outline-offset: 1px; }
+:is(a, button, select, input):focus-visible {
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 1px;
+}
+
+/* Shown instead of the app when JavaScript is off. */
+.noscript {
+  margin: 0;
+  padding: 12px 16px;
+  background: #fff3c4;
+  text-align: center;
+}
 /* #endregion */
 
 /* #region Header */
@@ -63,23 +113,44 @@ select, input[type="text"], button { font: inherit; }
   color: #fff;
   background: linear-gradient(180deg, var(--sky-top), var(--sky-bottom));
 }
-.header-text { position: relative; z-index: 2; }
+
+.header-text {
+  position: relative;
+  z-index: 2;
+}
+
 .site-header h1 {
   margin: 0;
   font-size: 1.6rem;
   letter-spacing: .01em;
   text-shadow: 0 2px 8px rgba(0, 30, 70, .4);
 }
-.site-header p { margin: 4px 0 0; opacity: .9; font-size: .95rem; }
+
+.site-header p {
+  margin: 4px 0 0;
+  font-size: .95rem;
+  opacity: .9;
+}
 
 /* Mountain silhouette along the bottom edge. */
-.peaks { position: absolute; left: 0; bottom: -1px; width: 100%; height: 60px; z-index: 1; }
+.peaks {
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  z-index: 1;
+  width: 100%;
+  height: 60px;
+}
+
 .peaks-back { fill: rgba(255, 255, 255, .35); }
 .peaks-front { fill: var(--snow); }
 
 /* Falling snow layer (also used in the welcome screen). */
 .snow {
-  position: absolute; inset: -200px 0 0 0; z-index: 1; pointer-events: none;
+  position: absolute;
+  inset: -200px 0 0 0;
+  z-index: 1;
+  pointer-events: none;
   background-image:
     radial-gradient(2px 2px at 20px 30px, #fff 60%, transparent),
     radial-gradient(3px 3px at 90px 120px, rgba(255, 255, 255, .9) 60%, transparent),
@@ -89,30 +160,40 @@ select, input[type="text"], button { font: inherit; }
   background-size: 200px 200px;
   animation: snowfall 12s linear infinite;
 }
+
 @keyframes snowfall {
-  from { transform: translate3d(0, 0, 0); }
-  to   { transform: translate3d(30px, 200px, 0); }
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(30px, 200px, 0);
+  }
 }
 
 /* Place, date and time badge in the top right corner. */
 .clock {
-  position: absolute; z-index: 2; top: 18px; right: 24px;
+  position: absolute;
+  top: 18px;
+  right: 24px;
+  z-index: 2;
   padding: 4px 12px;
+  border: 1px solid rgba(255, 255, 255, .35);
   border-radius: 999px;
   background: rgba(255, 255, 255, .16);
-  border: 1px solid rgba(255, 255, 255, .35);
-  font-size: .82rem; font-variant-numeric: tabular-nums;
+  font-size: .82rem;
+  font-variant-numeric: tabular-nums;
 }
 /* #endregion */
 
 /* #region Layout */
-/* Sidebar on the left, map filling the rest. */
+/* Sidebar on the left; the map (with the details panel docked on its right) filling the rest. */
 .layout {
   flex: 1;
   min-height: 0;
   display: grid;
   grid-template-columns: minmax(320px, 400px) 1fr;
 }
+
 .sidebar {
   display: flex;
   flex-direction: column;
@@ -122,177 +203,422 @@ select, input[type="text"], button { font: inherit; }
   overflow-y: auto;
   border-right: 1px solid var(--ice-line);
 }
-.map { min-height: 0; background: var(--ice); }
+
+.map-wrap {
+  position: relative;
+  display: flex;
+  min-height: 0;
+}
+
+.map {
+  flex: 1 1 auto;
+  min-height: 0;
+  background: var(--ice);
+}
 
 /* White card that holds each sidebar section. */
 .panel {
   flex: none;
-  background: var(--frost);
+  padding: 12px 14px;
   border: 1px solid var(--ice-line);
   border-radius: var(--radius);
-  padding: 12px 14px;
+  background: var(--frost);
   box-shadow: 0 2px 6px rgba(18, 49, 79, .06);
 }
+
 .panel h2 {
   margin: 0 0 8px;
   font-size: .78rem;
-  text-transform: uppercase;
   letter-spacing: .08em;
+  text-transform: uppercase;
   color: var(--ink-soft);
 }
+
 .panel h2.gap { margin-top: 14px; }
 /* #endregion */
 
 /* #region Highlights */
 /* "Resort of the day" and "Next opening" cards at the top of the sidebar. */
-.highlights { display: grid; gap: 10px; padding: 10px; }
+.highlights {
+  display: grid;
+  gap: 10px;
+  padding: 10px;
+}
+
 .card {
-  border-radius: 10px;
   padding: 10px 12px;
   border: 1px solid var(--ice-line);
+  border-radius: 10px;
   background: linear-gradient(135deg, #fff, var(--ice));
 }
+
 .card.pick { border-left: 4px solid var(--accent); }
 .card.next { border-left: 4px solid var(--prep); }
+
 .card-title {
-  font-size: .72rem; text-transform: uppercase; letter-spacing: .08em;
-  color: var(--ink-soft); margin-bottom: 4px;
+  margin-bottom: 4px;
+  font-size: .72rem;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
 }
+
 /* Clickable resort line inside a card. */
 .card-resort {
-  display: flex; justify-content: space-between; align-items: baseline; gap: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 10px;
   width: 100%;
   padding: 3px 0;
-  border: 0; background: none; color: inherit; text-align: left;
+  border: 0;
+  background: none;
+  color: inherit;
+  text-align: left;
   cursor: pointer;
 }
+
 .card-resort:hover .card-name { text-decoration: underline; }
-.card-name { font-weight: 700; font-size: .95rem; overflow-wrap: break-word; min-width: 0; }
-.card-extra { font-size: .8rem; color: var(--ink-soft); white-space: nowrap; font-variant-numeric: tabular-nums; }
+
+.card-name {
+  min-width: 0;
+  font-size: .95rem;
+  font-weight: 700;
+  overflow-wrap: break-word;
+}
+
+.card-extra {
+  font-size: .8rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-soft);
+  white-space: nowrap;
+}
 /* #endregion */
 
 /* #region Filter controls */
-/* Lift type and season status chips. */
-.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+/* Lift type, season status, season opening and weather chips. */
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
 .chip {
-  display: inline-flex; align-items: center; gap: 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   padding: 6px 12px 6px 6px;
   border: 1.5px solid var(--ice-line);
   border-radius: 999px;
   background: var(--snow);
   color: var(--ink);
-  font: inherit; font-size: .88rem;
+  font: inherit;
+  font-size: .88rem;
   cursor: pointer;
   transition: background .15s, border-color .15s, opacity .15s;
 }
-.chip .badge { width: 24px; height: 24px; }
+
+.chip .badge {
+  width: 24px;
+  height: 24px;
+}
+
+.chip small {
+  font-weight: 400;
+  color: var(--ink-soft);
+}
+
 .chip[aria-pressed="false"] { opacity: .6; }
-.chip[aria-pressed="true"] { background: var(--ice); border-color: var(--accent); font-weight: 600; }
+
+.chip[aria-pressed="true"] {
+  border-color: var(--accent);
+  background: var(--ice);
+  font-weight: 600;
+}
+
 .chip.chip-all { padding-left: 12px; }
 .chip.chip-status { padding: 6px 12px; }
-.chip small { color: var(--ink-soft); font-weight: 400; }
+
+/* Season-opening chips: a flame each; pressed they turn fire-colored. */
+.chip.chip-opening {
+  gap: 5px;
+  padding: 6px 12px;
+}
+
+.chip.chip-opening .flame {
+  flex: none;
+  width: 16px;
+  height: 16px;
+}
+
+.chip.chip-opening .flame path:first-child { fill: #e2562b; }
+.chip.chip-opening .flame path:last-child { fill: #ffc24a; }
+
+.chip.chip-opening[aria-pressed="true"] {
+  border-color: #c81e1e;
+  background: var(--fire-gradient);
+  color: #fff;
+  box-shadow: 0 0 8px rgba(255, 98, 0, .45);
+}
+
+.chip.chip-opening[aria-pressed="true"] small { color: #ffe3c9; }
+.chip.chip-opening[aria-pressed="true"] .flame path:first-child { fill: #fff3c4; }
+.chip.chip-opening[aria-pressed="true"] .flame path:last-child { fill: #ff9a1f; }
+
+/* Weather chips "Sunny" and "Fresh powder": pressed they take the weather's colors. */
+.chip.chip-weather {
+  gap: 5px;
+  padding: 6px 12px;
+}
+
+.chip.chip-weather svg {
+  flex: none;
+  width: 17px;
+  height: 17px;
+}
+
+.chip.chip-weather.sunny svg { color: var(--wx-sunny); }
+.chip.chip-weather.powder svg { color: var(--wx-snowy); }
+
+.chip.chip-weather.sunny[aria-pressed="true"] {
+  border-color: #e8790c;
+  background: linear-gradient(120deg, #f59e0b, #e8790c);
+  color: #fff;
+}
+
+.chip.chip-weather.powder[aria-pressed="true"] {
+  border-color: #2563a8;
+  background: var(--powder-gradient);
+  color: #fff;
+}
+
+.chip.chip-weather[aria-pressed="true"] svg,
+.chip.chip-weather[aria-pressed="true"] small {
+  color: #fff;
+}
 
 /* Valley dropdown and address field. */
-select, input[type="text"] {
+select,
+input[type="text"] {
   width: 100%;
   padding: 8px 10px;
-  color: var(--ink);
-  background: var(--snow);
   border: 1.5px solid var(--ice-line);
   border-radius: 8px;
+  background: var(--snow);
+  color: var(--ink);
 }
 /* #endregion */
 
 /* #region Home address form */
 /* Address input with Calculate / Clear buttons and a status line below. */
-.home-form { display: flex; flex-wrap: wrap; gap: 8px; }
+.home-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
 .home-form input { flex: 1 1 100%; }
+
 .home-form button {
   padding: 8px 14px;
-  border: 0; border-radius: 8px;
-  background: var(--accent); color: #fff; font-weight: 600;
+  border: 0;
+  border-radius: 8px;
+  background: var(--accent);
+  color: #fff;
+  font-weight: 600;
   cursor: pointer;
 }
-.home-form button.ghost { background: transparent; color: var(--accent); border: 1.5px solid var(--ice-line); }
-.home-form button:disabled { opacity: .6; cursor: progress; }
-.status { margin: 8px 0 0; font-size: .85rem; color: var(--ink-soft); min-height: 1.2em; }
-.status.error { color: #b3261e; }
+
+.home-form button.ghost {
+  border: 1.5px solid var(--ice-line);
+  background: transparent;
+  color: var(--accent);
+}
+
+.home-form button:disabled {
+  opacity: .6;
+  cursor: progress;
+}
+
+.status {
+  min-height: 1.2em;
+  margin: 8px 0 0;
+  font-size: .85rem;
+  color: var(--ink-soft);
+}
+
+.status.error { color: var(--error); }
 /* #endregion */
 
 /* #region Search bar */
 /* Rounded search field with a magnifier icon inside. */
-.search-wrap { position: relative; margin: 2px 0 8px; }
-.search-wrap svg {
-  position: absolute; left: 11px; top: 50%; transform: translateY(-50%);
-  width: 17px; height: 17px; color: var(--ink-soft); pointer-events: none;
+.search-wrap {
+  position: relative;
+  margin: 2px 0 8px;
 }
+
+.search-wrap svg {
+  position: absolute;
+  top: 50%;
+  left: 11px;
+  width: 17px;
+  height: 17px;
+  transform: translateY(-50%);
+  color: var(--ink-soft);
+  pointer-events: none;
+}
+
 input[type="search"] {
   width: 100%;
+  margin-bottom: 6px;
   padding: 9px 12px 9px 36px;
-  color: var(--ink);
-  background: var(--snow);
   border: 1.5px solid var(--ice-line);
   border-radius: 999px;
+  background: var(--snow);
+  color: var(--ink);
   transition: border-color .15s, box-shadow .15s, background .15s;
 }
-input[type="search"]:focus { background: #fff; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(29, 111, 184, .15); outline: none; }
-#search-input { margin-bottom: 6px; }
+
+input[type="search"]:focus {
+  border-color: var(--accent);
+  outline: none;
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(29, 111, 184, .15);
+}
 /* #endregion */
 
 /* #region Resort list */
 /* Header line with the result count. */
 .list-panel { flex: 1 0 auto; }
-.list-head { display: flex; justify-content: space-between; align-items: baseline; }
-.count { font-size: .82rem; color: var(--ink-soft); }
+
+.list-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.count {
+  font-size: .82rem;
+  color: var(--ink-soft);
+}
 
 /* Each resort is a separate clickable card: badge, name + labels, distance. */
-.resort-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.resort-list {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
 .resort {
   display: grid;
   grid-template-columns: 34px 1fr auto;
-  gap: 10px; align-items: center;
+  align-items: center;
+  gap: 10px;
   width: 100%;
   padding: 10px;
-  border: 1px solid var(--ice); border-radius: 10px;
-  background: #fff; color: inherit; text-align: left;
+  border: 1px solid var(--ice);
+  border-radius: 10px;
+  background: #fff;
+  color: inherit;
+  text-align: left;
   cursor: pointer;
 }
-.resort:hover { background: var(--snow); border-color: var(--ice-line); }
+
+.resort:hover {
+  border-color: var(--ice-line);
+  background: var(--snow);
+}
+
 .resort .body { min-width: 0; }
-.resort .name { font-weight: 600; font-size: .93rem; line-height: 1.5; overflow-wrap: anywhere; }
-.row-status { display: flex; flex-wrap: wrap; align-items: center; gap: 5px; margin-top: 4px; }
+
+.resort .name {
+  display: block;
+  font-size: .93rem;
+  font-weight: 600;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.row-status {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 5px;
+  margin-top: 4px;
+}
 
 /* Distance and drive time on the right. */
-.resort .dist { text-align: right; font-weight: 700; font-size: .85rem; color: var(--ink); white-space: nowrap; font-variant-numeric: tabular-nums; }
-.resort .dist small { display: block; margin-top: 1px; font-weight: 500; font-size: .74rem; color: var(--ink-soft); }
+.resort .dist {
+  font-size: .85rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+  text-align: right;
+  white-space: nowrap;
+}
+
+.resort .dist small {
+  display: block;
+  margin-top: 1px;
+  font-size: .74rem;
+  font-weight: 500;
+  color: var(--ink-soft);
+}
 
 /* Shown when no resort matches the filters. */
-.empty { padding: 14px 4px; color: var(--ink-soft); font-size: .9rem; }
+.empty {
+  padding: 14px 4px;
+  font-size: .9rem;
+  color: var(--ink-soft);
+}
 /* #endregion */
 
 /* #region Lift badges and status dots */
 /* Round lift-type icon used in chips, list rows, map pins and the welcome screen. */
 .badge {
   position: relative;
-  display: inline-grid; place-items: center;
-  width: 34px; height: 34px;
+  display: inline-grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border: 2px solid #fff;
   border-radius: 50%;
   color: #fff;
-  border: 2px solid #fff;
   box-shadow: 0 2px 6px rgba(10, 35, 60, .4);
 }
-.badge svg { width: 68%; height: 68%; }
+
+.badge svg {
+  width: 68%;
+  height: 68%;
+}
+
 .badge.gondola { background: var(--gondola); }
 .badge.chairlift { background: var(--chairlift); }
 .badge.tbar { background: var(--tbar); }
 .badge.home { background: var(--home); }
 
 /* Small colored dot for the season status (on chips and in the corner of map pins). */
-.dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; }
+.dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
 .dot.open { background: var(--open); }
 .dot.prep { background: var(--prep); }
 .dot.ended { background: var(--ended); }
-.badge .dot { position: absolute; top: -3px; right: -3px; border: 2px solid #fff; width: 13px; height: 13px; }
+
+.badge .dot {
+  position: absolute;
+  top: -3px;
+  right: -3px;
+  width: 13px;
+  height: 13px;
+  border: 2px solid #fff;
+}
 /* #endregion */
 
 /* #region Labels: status pills, timer chips, parking */
@@ -301,28 +627,61 @@ input[type="search"]:focus { background: #fff; border-color: var(--accent); box-
   display: inline-block;
   padding: 3px 8px;
   border-radius: 6px;
-  font-size: .7rem; font-weight: 700; letter-spacing: .02em; line-height: 1.3;
-  white-space: nowrap; vertical-align: middle;
   color: #fff;
+  font-size: .7rem;
+  font-weight: 700;
+  letter-spacing: .02em;
+  line-height: 1.3;
+  white-space: nowrap;
+  vertical-align: middle;
 }
-.pill svg { width: 14px; height: 14px; margin-right: 4px; vertical-align: -3px; }
+
+.pill svg {
+  width: 14px;
+  height: 14px;
+  margin-right: 4px;
+  vertical-align: -3px;
+}
+
 .pill.open { background: var(--open); }
 .pill.prep { background: var(--prep); }
 .pill.ended { background: var(--ended); }
-.pill.last { background: #fff; color: var(--last); box-shadow: inset 0 0 0 1.5px var(--last); }
+
+.pill.last {
+  background: #fff;
+  color: var(--last);
+  box-shadow: inset 0 0 0 1.5px var(--last);
+}
 
 /* Timer chip: label + bold countdown, e.g. "Opens in 3d 4h". */
 .tchip {
-  display: inline-flex; align-items: baseline; gap: 5px;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 5px;
   padding: 3px 9px;
   border-radius: 6px;
-  color: #fff; font-size: .72rem; line-height: 1.3; white-space: nowrap;
+  color: #fff;
+  font-size: .72rem;
+  line-height: 1.3;
+  white-space: nowrap;
   box-shadow: 0 2px 6px rgba(14, 58, 102, .22);
 }
-.tchip b { font-size: .86rem; font-variant-numeric: tabular-nums; letter-spacing: .01em; }
-.tchip svg { width: 15px; height: 15px; flex: none; align-self: center; }
-.tchip.opens   { background: linear-gradient(135deg, #0e3a66, #1d6fb8); }
-.tchip.lift    { background: linear-gradient(135deg, #0b8a83, #1d6fb8); }
+
+.tchip b {
+  font-size: .86rem;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: .01em;
+}
+
+.tchip svg {
+  flex: none;
+  align-self: center;
+  width: 15px;
+  height: 15px;
+}
+
+.tchip.opens { background: linear-gradient(135deg, #0e3a66, #1d6fb8); }
+.tchip.lift { background: linear-gradient(135deg, #0b8a83, #1d6fb8); }
 .tchip.running { background: linear-gradient(135deg, #1a8a4a, #0b8a83); }
 
 /* Parking price: green when free, yellow to red as the price rises. */
@@ -330,168 +689,421 @@ input[type="search"]:focus { background: #fff; border-color: var(--accent); box-
   display: inline-block;
   padding: 3px 8px;
   border-radius: 6px;
-  font-size: .72rem; font-weight: 800; letter-spacing: .02em; line-height: 1.3;
+  font-size: .72rem;
+  font-weight: 800;
+  letter-spacing: .02em;
+  line-height: 1.3;
   white-space: nowrap;
 }
-.park.gratis { background: #dcfce7; color: #166534; }
-.paid.low  { background: #fef3c7; color: #92400e; }
-.paid.mid  { background: #ffedd5; color: #c2410c; }
-.paid.high { background: #fee2e2; color: #b91c1c; }
+
+.park.gratis {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.paid.low {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.paid.mid {
+  background: #ffedd5;
+  color: #c2410c;
+}
+
+.paid.high {
+  background: #fee2e2;
+  color: #b91c1c;
+}
 /* #endregion */
 
-/* #region Resort details popup */
-/* Leaflet popup frame. */
+/* #region Resort details card */
+/* Leaflet popup frame (the home pin's address popup). */
 .leaflet-popup-content-wrapper { border-radius: var(--radius); }
 .leaflet-popup-content { margin: 16px 16px 14px; }
 
 /* Title and the row of labels under it. */
-.popup h3 { margin: 0 22px 6px 0; font-size: 1.12rem; line-height: 1.25; color: var(--ink); }
-.popup p { margin: 2px 0; font-size: .85rem; color: var(--ink-soft); }
-.popup .pills { display: flex; flex-wrap: wrap; gap: 4px; margin: 0 0 10px; }
+.popup h3 {
+  margin: 0 22px 6px 0;
+  font-size: 1.12rem;
+  line-height: 1.25;
+  color: var(--ink);
+}
+
+.popup p {
+  margin: 2px 0;
+  font-size: .85rem;
+  color: var(--ink-soft);
+}
+
+.popup .pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin: 0 0 10px;
+}
 
 /* Lift-type tag next to the status pill. */
 .popup .tag {
   display: inline-block;
-  margin-top: 0;
   padding: 3px 8px;
   border-radius: 6px;
-  color: #fff; font-size: .75rem; font-weight: 600; line-height: 1.3;
+  color: #fff;
+  font-size: .75rem;
+  font-weight: 600;
+  line-height: 1.3;
 }
+
 .popup .tag.gondola { background: var(--gondola); }
 .popup .tag.chairlift { background: var(--chairlift); }
 .popup .tag.tbar { background: var(--tbar); }
 
 /* Fact table: label column on the left, value (+ copy button or chip) on the right. */
 .facts {
-  display: grid; grid-template-columns: auto 1fr; gap: 0;
-  margin: 10px 0 10px;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  margin: 10px 0;
   font-size: .85rem;
 }
-.facts dt, .facts dd { margin: 0; padding: 6px 0; border-top: 1px solid var(--ice); }
-.facts dt {
-  display: flex; align-items: center; align-self: stretch;
-  padding-right: 14px;
-  font-size: .7rem; font-weight: 700; letter-spacing: .07em; text-transform: uppercase;
-  color: var(--ink-soft); white-space: nowrap;
-}
+
+.facts dt,
 .facts dd {
-  display: flex; flex-wrap: nowrap; align-items: center; justify-content: space-between; gap: 6px;
-  color: var(--ink); font-weight: 600; overflow-wrap: anywhere;
+  margin: 0;
+  padding: 6px 0;
+  border-top: 1px solid var(--ice);
 }
-.facts dd > span:first-child { flex: 1 1 0; min-width: 0; }
-.facts .tchip { flex: none; box-shadow: none; }
+
+.facts dt {
+  display: flex;
+  align-items: center;
+  align-self: stretch;
+  padding-right: 14px;
+  color: var(--ink-soft);
+  font-size: .7rem;
+  font-weight: 700;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.facts dd {
+  display: flex;
+  flex-wrap: nowrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 6px;
+  color: var(--ink);
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.facts dd > span:first-child {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.facts .tchip {
+  flex: none;
+  box-shadow: none;
+}
+
 .popup .facts .park { font-size: .8rem; }
 
 /* Small "Copy" button next to the address and GPS values. */
 .copy-btn {
-  display: inline-flex; align-items: center; gap: 4px; flex: none;
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 4px;
   padding: 3px 8px;
-  border: 1.5px solid var(--ice-line); border-radius: 6px;
-  background: var(--snow); color: var(--accent);
-  font: inherit; font-size: .72rem; font-weight: 700;
+  border: 1.5px solid var(--ice-line);
+  border-radius: 6px;
+  background: var(--snow);
+  color: var(--accent);
+  font: inherit;
+  font-size: .72rem;
+  font-weight: 700;
   cursor: pointer;
   transition: background .15s, border-color .15s, color .15s;
 }
-.copy-btn svg { width: 13px; height: 13px; }
-.copy-btn:hover { background: var(--ice); border-color: var(--accent); }
-.copy-btn.done { background: #dcfce7; border-color: #86efac; color: #166534; }
+
+.copy-btn svg {
+  width: 13px;
+  height: 13px;
+}
+
+.copy-btn:hover {
+  border-color: var(--accent);
+  background: var(--ice);
+}
+
+.copy-btn.done {
+  border-color: #86efac;
+  background: #dcfce7;
+  color: #166534;
+}
 
 /* "Show directions" button at the bottom, with a hint when no home address is set. */
 .route-btn {
-  display: block; width: 100%; margin-top: 0; padding: 9px 12px;
-  border: 0; border-radius: 10px;
-  background: var(--home); color: #fff;
-  font: inherit; font-size: .88rem; font-weight: 700;
+  display: block;
+  width: 100%;
+  margin: 0;
+  padding: 9px 12px;
+  border: 0;
+  border-radius: 10px;
+  background: var(--home);
+  color: #fff;
+  font: inherit;
+  font-size: .88rem;
+  font-weight: 700;
   cursor: pointer;
   transition: background .15s;
 }
+
 .route-btn:hover:not(:disabled) { background: #b93a20; }
-.route-btn:disabled { opacity: .5; cursor: not-allowed; }
-.popup p.route-hint { margin: 6px 0 0; font-size: .78rem; text-align: center; }
+
+.route-btn:disabled {
+  opacity: .5;
+  cursor: not-allowed;
+}
+
+.popup p.route-hint {
+  margin: 6px 0 0;
+  font-size: .78rem;
+  text-align: center;
+}
+
+/* Phones swap "Show directions" (route line on this map) for a link that opens Google Maps
+   (shown by the phone layout at the end). */
+.gmaps-btn {
+  display: none;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  background: linear-gradient(120deg, #1a73e8, #1557b0);
+  text-align: center;
+  text-decoration: none;
+  box-shadow: 0 4px 12px rgba(26, 115, 232, .3);
+}
+
+.popup a.gmaps-btn { color: #fff; }
+
+.gmaps-btn svg {
+  flex: none;
+  width: 18px;
+  height: 18px;
+}
+
+.gmaps-btn:hover { background: linear-gradient(120deg, #1765cc, #124a99); }
 /* #endregion */
 
 /* #region Hero banners */
 /* Big colored banner at the top of the details: label + note on the left, countdown tiles on the right. */
 .hero {
-  display: flex; align-items: center; justify-content: space-between; gap: 10px;
-  margin: 0 0 8px; padding: 10px 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 8px;
+  padding: 10px 12px;
   border-radius: 14px;
   color: #fff;
 }
-.hero-label { font-size: .72rem; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; }
-.hero-label svg { width: 20px; height: 20px; margin-right: 6px; vertical-align: -5px; }
-.hero-note { margin-top: 2px; font-size: .8rem; opacity: .9; }
+
+.hero-label {
+  font-size: .72rem;
+  font-weight: 800;
+  letter-spacing: .06em;
+  line-height: 1.25;
+  text-transform: uppercase;
+}
+
+.hero-label svg {
+  width: 20px;
+  height: 20px;
+  margin-right: 6px;
+  vertical-align: -5px;
+}
+
+.hero-note {
+  margin-top: 2px;
+  font-size: .8rem;
+  opacity: .9;
+}
 
 /* Countdown tiles, e.g. "12 HOURS | 45 MIN". */
-.hero-tiles { display: flex; gap: 6px; flex: none; }
-.hero-tile {
-  min-width: 52px; padding: 6px 6px 5px;
-  border-radius: 10px; text-align: center;
-  background: rgba(255, 255, 255, .18);
-  border: 1px solid rgba(255, 255, 255, .3);
+.hero-tiles {
+  display: flex;
+  flex: none;
+  gap: 6px;
 }
-.hero-tile b { display: block; font-size: 1.45rem; line-height: 1; font-variant-numeric: tabular-nums; }
-.hero-tile span { display: block; margin-top: 3px; font-size: .6rem; letter-spacing: .1em; text-transform: uppercase; opacity: .9; }
+
+.hero-tile {
+  min-width: 46px;
+  padding: 6px 6px 5px;
+  border: 1px solid rgba(255, 255, 255, .3);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, .18);
+  text-align: center;
+}
+
+.hero-tile b {
+  display: block;
+  font-size: 1.45rem;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.hero-tile span {
+  display: block;
+  margin-top: 3px;
+  font-size: .6rem;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  opacity: .9;
+}
 
 /* "Season opens in" (in preparation). */
 .hero.opens { background: linear-gradient(135deg, #0e3a66, #2a78bf); }
 
 /* "See you next season!" (season ended) with a waving hand. */
-.hero.ended { justify-content: center; padding: 16px 12px; background: linear-gradient(135deg, #51667a, #7d93a8); }
-.hero.ended .hero-label { font-size: .95rem; letter-spacing: .04em; text-transform: none; }
-.hero.ended .hero-label svg { width: 22px; height: 22px; animation: wave 1.6s ease-in-out infinite; transform-origin: 60% 90%; }
-@keyframes wave { 0%, 100% { transform: rotate(0); } 25% { transform: rotate(16deg); } 75% { transform: rotate(-10deg); } }
-/* #endregion */
-
-/* #region Time column */
-/* Every details banner and plan step reads "Action in | countdown | at time":
-   label column, countdown column, then a fixed-width time column, so stacked times line up. */
-.popup .hero, .popup .plan-step {
-  display: grid; grid-template-columns: minmax(0, 1fr) 98px 80px;
-  align-items: center; column-gap: 10px;
+.hero.ended {
+  justify-content: center;
+  padding: 16px 12px;
+  background: linear-gradient(135deg, #51667a, #7d93a8);
 }
-.popup .hero > .hero-text { grid-column: 1; }
-.popup .hero > .hero-tiles { grid-column: 2; justify-self: end; margin-left: 0; }
-.popup .hero > .when, .popup .plan-step > .when { grid-column: 3; }
-.popup .hero.ended, .popup .hero.tomorrow { grid-template-columns: minmax(0, 1fr); }
-.hero-label { line-height: 1.25; letter-spacing: .06em; }
-.hero-tile { min-width: 46px; }
 
-.when { text-align: right; line-height: 1.15; font-variant-numeric: tabular-nums; white-space: nowrap; }
-.when small { display: block; font-size: .6rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; opacity: .85; }
-.when-time { display: flex; align-items: baseline; justify-content: flex-end; gap: 4px; margin-top: 1px; }
-.when-time .at { font-size: .72rem; font-weight: 600; opacity: .8; }
+.hero.ended .hero-label {
+  font-size: .95rem;
+  letter-spacing: .04em;
+  text-transform: none;
+}
+
+.hero.ended .hero-label svg {
+  width: 22px;
+  height: 22px;
+  transform-origin: 60% 90%;
+  animation: wave 1.6s ease-in-out infinite;
+}
+
+@keyframes wave {
+  0%,
+  100% {
+    transform: rotate(0);
+  }
+  25% {
+    transform: rotate(16deg);
+  }
+  75% {
+    transform: rotate(-10deg);
+  }
+}
+
+/* Time column: every banner and plan step reads "Action in | countdown | at time": label column,
+   countdown column, then a fixed-width time column, so the times of stacked elements line up. */
+.popup .hero,
+.popup .plan-step {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 98px 80px;
+  align-items: center;
+  column-gap: 10px;
+}
+
+.popup .hero > .hero-text { grid-column: 1; }
+
+.popup .hero > .hero-tiles {
+  grid-column: 2;
+  justify-self: end;
+  margin-left: 0;
+}
+
+.popup .hero > .when,
+.popup .plan-step > .when {
+  grid-column: 3;
+}
+
+.popup .hero.ended,
+.popup .hero.tomorrow {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.when {
+  font-variant-numeric: tabular-nums;
+  line-height: 1.15;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.when small {
+  display: block;
+  font-size: .6rem;
+  font-weight: 700;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  opacity: .85;
+}
+
+.when-time {
+  display: flex;
+  justify-content: flex-end;
+  align-items: baseline;
+  gap: 4px;
+  margin-top: 1px;
+}
+
+.when-time .at {
+  font-size: .72rem;
+  font-weight: 600;
+  opacity: .8;
+}
+
 .when-time b { font-size: 1.15rem; }
 .hero.night .when-time b { color: #ffe9a8; }
 
-.plan-step .plan-label { grid-column: 1; min-width: 0; line-height: 1.25; letter-spacing: .04em; white-space: nowrap; }
-.plan-in { grid-column: 2; justify-self: end; font-size: .95rem; white-space: nowrap; font-variant-numeric: tabular-nums; }
-
 /* The hype tag gets its own row under the slope banner line. */
-.popup .hero.slope > .hype-tag { grid-column: 1 / -1; justify-self: start; margin-top: 8px; }
+.popup .hero.slope > .hype-tag {
+  grid-column: 1 / -1;
+  justify-self: start;
+  margin-top: 8px;
+}
 
 /* "Try tomorrow!" banner: soft dawn colors, dark text. */
 .plan-wrap { margin: 0 0 8px; }
 .plan-wrap > .plan { margin: 0; }
+
 .hero.tomorrow {
-  margin: 0 0 6px; padding: 10px 12px;
-  background: linear-gradient(120deg, #ffe7c7, #ffd0b0 60%, #f7b7c4);
+  margin: 0 0 6px;
+  padding: 10px 12px;
   border: 1px solid #f4b98e;
+  background: linear-gradient(120deg, #ffe7c7, #ffd0b0 60%, #f7b7c4);
   color: #6b2a00;
 }
-.hero.tomorrow .hero-label { font-size: .95rem; letter-spacing: .03em; text-transform: none; }
-.hero.tomorrow .hero-label svg { width: 22px; height: 22px; color: #d9480f; }
+
+.hero.tomorrow .hero-label {
+  font-size: .95rem;
+  letter-spacing: .03em;
+  text-transform: none;
+}
+
+.hero.tomorrow .hero-label svg {
+  width: 22px;
+  height: 22px;
+  color: #d9480f;
+}
+
 .hero.tomorrow .hero-note { opacity: 1; }
 /* #endregion */
 
 /* #region Day plan */
-/* Go to bed -> Wake up at -> Start driving -> On the slope, joined by dashed gap lines. */
+/* Go to bed -> Wake up -> Start driving -> On the slope, joined by dashed gap lines. */
 .plan { margin: 0 0 8px; }
 .plan .hero { margin: 0; }
 
 /* "Go to bed" night card: starry sky, crescent moon and moon-yellow text. */
 .hero.night {
-  position: relative; overflow: hidden; isolation: isolate;
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
   background:
     radial-gradient(1.5px 1.5px at 18% 22%, #fff 70%, transparent),
     radial-gradient(1px 1px at 34% 70%, rgba(255, 255, 255, .8) 70%, transparent),
@@ -502,131 +1114,723 @@ input[type="search"]:focus { background: #fff; border-color: var(--accent); box-
     linear-gradient(160deg, #0b1230, #1c1f5a 55%, #33256e);
   box-shadow: 0 6px 16px rgba(20, 16, 70, .35);
 }
-/* Extra stars that twinkle. */
+
+/* Extra stars that twinkle (opacity only). */
 .hero.night::before {
-  content: ""; position: absolute; inset: 0; z-index: -1;
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
   background:
     radial-gradient(1.5px 1.5px at 26% 40%, #fff 70%, transparent),
     radial-gradient(1.5px 1.5px at 58% 60%, #fff 70%, transparent),
     radial-gradient(1px 1px at 12% 50%, #fff 70%, transparent);
   animation: twinkle 3.2s ease-in-out infinite alternate;
 }
-@keyframes twinkle { from { opacity: .2; } to { opacity: 1; } }
+
+@keyframes twinkle {
+  from {
+    opacity: .2;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
 /* Crescent moon: a circle drawn only by its inset shadow. */
 .hero.night .moon {
-  position: absolute; top: 7px; right: 206px; z-index: -1;
-  width: 18px; height: 18px; border-radius: 50%;
+  position: absolute;
+  top: 7px;
+  right: 206px;
+  z-index: -1;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
   box-shadow: inset -5px 2px 0 0 #ffe9a8;
   filter: drop-shadow(0 0 6px rgba(255, 233, 168, .6));
 }
+
 .hero.night:not(:has(.hero-tiles)) .moon { right: 92px; }
 .hero.night .hero-label { color: #ffe9a8; }
-.hero.night .hero-label svg { width: 22px; height: 22px; color: #fff; }
-.hero.night .hero-tile { background: rgba(255, 255, 255, .1); border-color: rgba(255, 233, 168, .35); }
+
+.hero.night .hero-label svg {
+  width: 22px;
+  height: 22px;
+  color: #fff;
+}
+
+.hero.night .hero-tile {
+  border-color: rgba(255, 233, 168, .35);
+  background: rgba(255, 255, 255, .1);
+}
+
 .hero.night .hero-tile b { color: #ffe9a8; }
 
-/* "Wake up at" and "Start driving" rows: icon + label left, clock time right. */
+/* "Wake up in" and "Start driving in" steps: icon + label left, countdown, then the clock time. */
 .plan-step {
-  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
   padding: 8px 12px;
-  border-radius: 12px;
   border: 1px solid var(--ice-line);
+  border-radius: 12px;
 }
+
 .plan-label {
-  display: inline-flex; align-items: center; gap: 7px;
-  font-size: .72rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: .72rem;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
 }
-.plan-label svg { width: 18px; height: 18px; flex: none; }
-.plan-time { font-size: 1.05rem; font-variant-numeric: tabular-nums; white-space: nowrap; }
-.plan-step.wake { background: linear-gradient(120deg, #fff4d6, #ffe2c2); border-color: #f6c98b; color: #7a3e00; }
-.plan-step.drive { background: linear-gradient(120deg, #e8f1fb, #d6e7f7); border-color: #b5d1ec; color: #0e3a66; }
+
+.plan-label svg {
+  flex: none;
+  width: 18px;
+  height: 18px;
+}
+
+.plan-step .plan-label {
+  grid-column: 1;
+  min-width: 0;
+  letter-spacing: .04em;
+  line-height: 1.25;
+  white-space: nowrap;
+}
+
+.plan-step.wake {
+  border-color: #f6c98b;
+  background: linear-gradient(120deg, #fff4d6, #ffe2c2);
+  color: #7a3e00;
+}
+
+.plan-step.drive {
+  border-color: #b5d1ec;
+  background: linear-gradient(120deg, #e8f1fb, #d6e7f7);
+  color: #0e3a66;
+}
+
+/* Countdown tiles inside the light steps: same rounded squares as the dark banners, tinted to each step. */
+.popup .plan-step > .hero-tiles {
+  grid-column: 2;
+  justify-self: end;
+}
+
+.plan-step .hero-tile {
+  border: 1px solid rgba(0, 0, 0, .12);
+  background: rgba(255, 255, 255, .7);
+}
+
+.plan-step .hero-tile span { opacity: .75; }
+.plan-step.wake .hero-tile { border-color: #f1b979; }
+.plan-step.drive .hero-tile { border-color: #a9c8e6; }
 
 /* Dashed connector with the time between two steps, e.g. "sleep 8 h". */
 .plan-gap {
   position: relative;
-  margin: 0 0 0 21px; padding: 4px 0 4px 16px;
+  margin: 0 0 0 21px;
+  padding: 4px 0 4px 16px;
   border-left: 2px dashed var(--ice-line);
-  font-size: .72rem; color: var(--ink-soft);
+  font-size: .72rem;
+  color: var(--ink-soft);
 }
 /* #endregion */
 
 /* #region On the slope (hype) */
 /* Deep red background so white text stays readable; motion is slow and sparse. */
-.tchip.slope, .hero.slope { position: relative; overflow: hidden; isolation: isolate; }
-.tchip.slope { background: linear-gradient(120deg, #a81e3a, #8a1c4c); box-shadow: 0 2px 6px rgba(120, 20, 50, .3); }
+.tchip.slope,
+.hero.slope {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.tchip.slope {
+  background: linear-gradient(120deg, #a81e3a, #8a1c4c);
+  box-shadow: 0 2px 6px rgba(120, 20, 50, .3);
+}
+
 .hero.slope {
   background: linear-gradient(120deg, #b3262f, #8a1c4c 55%, #a81e3a);
   background-size: 200% 100%;
   box-shadow: 0 6px 16px rgba(120, 20, 50, .28);
   animation: hype-drift 14s ease-in-out infinite alternate;
 }
-@keyframes hype-drift { to { background-position: 100% 0; } }
 
-/* A soft light sweep, once every few seconds. */
-.tchip.slope::after, .hero.slope::after {
-  content: ""; position: absolute; top: 0; bottom: 0; left: -60%; width: 35%; z-index: -1;
+@keyframes hype-drift {
+  to {
+    background-position: 100% 0;
+  }
+}
+
+/* A soft light sweep, once every few seconds. It moves by transform only (no layout work):
+   190% of the banner's width is 543% of the sweep's own 35% width. */
+.tchip.slope::after,
+.hero.slope::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -60%;
+  z-index: -1;
+  width: 35%;
   background: linear-gradient(100deg, transparent, rgba(255, 255, 255, .16), transparent);
   transform: skewX(-20deg);
   animation: hype-shine 7s ease-in-out infinite;
 }
-@keyframes hype-shine { 0%, 70% { left: -60%; } 100% { left: 130%; } }
+
+@keyframes hype-shine {
+  0%,
+  70% {
+    transform: translateX(0) skewX(-20deg);
+  }
+  100% {
+    transform: translateX(543%) skewX(-20deg);
+  }
+}
 
 /* Faint speed lines drifting slowly. */
 .hero.slope::before {
-  content: ""; position: absolute; inset: 0; z-index: -1; opacity: .07;
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
   background: repeating-linear-gradient(100deg, transparent 0 34px, #fff 34px 35px, transparent 35px 90px);
+  opacity: .07;
   animation: speed-lines 6s linear infinite;
 }
-@keyframes speed-lines { from { background-position: 0 0; } to { background-position: -180px 0; } }
+
+@keyframes speed-lines {
+  from {
+    background-position: 0 0;
+  }
+  to {
+    background-position: -180px 0;
+  }
+}
 
 /* The skier icon carves gently. */
-.tchip.slope svg, .hero.slope .hero-label svg { animation: ski-carve 1.8s ease-in-out infinite alternate; transform-origin: 50% 80%; }
-@keyframes ski-carve {
-  from { transform: translateX(-1px) rotate(-7deg); }
-  to   { transform: translateX(1px) rotate(6deg); }
+.tchip.slope svg,
+.hero.slope .hero-label svg {
+  transform-origin: 50% 80%;
+  animation: ski-carve 1.8s ease-in-out infinite alternate;
 }
-.hero.slope .hero-label svg { width: 24px; height: 24px; }
+
+@keyframes ski-carve {
+  from {
+    transform: translateX(-1px) rotate(-7deg);
+  }
+  to {
+    transform: translateX(1px) rotate(6deg);
+  }
+}
+
+.hero.slope .hero-label svg {
+  width: 24px;
+  height: 24px;
+}
+
 .hero.slope .hero-note { opacity: 1; }
-.hero.slope .hero-tile { background: rgba(40, 0, 15, .32); border-color: rgba(255, 255, 255, .28); }
+
+.hero.slope .hero-tile {
+  border-color: rgba(255, 255, 255, .28);
+  background: rgba(40, 0, 15, .32);
+}
+
 .hero.slope .hero-tile span { opacity: 1; }
 
 /* Tilted yellow tag: "Go go go!", "Gear up!", "Fresh tracks await". */
 .hype-tag {
-  display: inline-block; margin-top: 6px;
+  display: inline-block;
+  margin-top: 6px;
   padding: 2px 9px;
   border-radius: 6px;
-  background: #ffe9a3; color: #5a2300;
-  font-size: .72rem; font-weight: 900; letter-spacing: .08em; text-transform: uppercase;
+  background: #ffe9a3;
+  color: #5a2300;
+  font-size: .72rem;
+  font-weight: 900;
+  letter-spacing: .08em;
+  text-transform: uppercase;
   transform: rotate(-2deg);
   animation: hype-bounce 2.4s ease-in-out infinite alternate;
 }
-@keyframes hype-bounce { from { transform: rotate(-2deg) scale(1); } to { transform: rotate(-1deg) scale(1.04); } }
+
+@keyframes hype-bounce {
+  from {
+    transform: rotate(-2deg) scale(1);
+  }
+  to {
+    transform: rotate(-1deg) scale(1.04);
+  }
+}
 /* #endregion */
 
 /* #region Recently opened (fire) */
 /* Flame pill, warm row highlight and glowing map pin for resorts that opened in the last days. */
 .pill.fire {
+  background: var(--fire-gradient);
   color: #fff;
-  background: linear-gradient(120deg, #d9480f, #c81e1e);
-  box-shadow: 0 0 8px rgba(255, 98, 0, .45);
   text-shadow: 0 1px 2px rgba(120, 20, 0, .5);
+  box-shadow: 0 0 8px rgba(255, 98, 0, .45);
 }
+
 /* Only the flame moves: it grows and shrinks. */
-.pill.fire .flame { transform-origin: 50% 90%; animation: flame-flicker .9s ease-in-out infinite alternate; }
-@keyframes flame-flicker {
-  from { transform: scale(.9); }
-  to   { transform: scale(1.25); }
+.pill.fire .flame {
+  transform-origin: 50% 90%;
+  animation: flame-flicker .9s ease-in-out infinite alternate;
 }
+
+@keyframes flame-flicker {
+  from {
+    transform: scale(.9);
+  }
+  to {
+    transform: scale(1.25);
+  }
+}
+
 .resort.is-new {
-  background: linear-gradient(90deg, rgba(255, 122, 24, .14), rgba(255, 122, 24, 0) 70%);
   border-color: rgba(255, 122, 24, .35);
+  background: linear-gradient(90deg, rgba(255, 122, 24, .14), rgba(255, 122, 24, 0) 70%);
   box-shadow: inset 3px 0 0 #ff7a18;
 }
-.resort.is-new:hover { background: linear-gradient(90deg, rgba(255, 122, 24, .22), rgba(255, 122, 24, .04) 70%); }
-.badge.is-new { animation: ember 1s ease-in-out infinite alternate; }
+
+.resort.is-new:hover {
+  background: linear-gradient(90deg, rgba(255, 122, 24, .22), rgba(255, 122, 24, .04) 70%);
+}
+
+/* Ember glow on map pins and on tomorrow's cards in the welcome screen: a steady warm ring, plus a
+   stronger glow on ::after that pulses by opacity only (cheaper than animating box-shadow). The glow
+   sits behind the badge's icon and status dot. */
+.badge.is-new,
+.welcome-resort.hot .badge {
+  isolation: isolate;
+  box-shadow: 0 0 0 2px rgba(255, 150, 40, .7), 0 0 8px 2px rgba(255, 98, 0, .55);
+}
+
+.badge.is-new::after,
+.welcome-resort.hot .badge::after {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  z-index: -1;
+  border-radius: 50%;
+  box-shadow: 0 0 0 4px rgba(255, 190, 70, .8), 0 0 20px 7px rgba(255, 60, 0, .85);
+  opacity: 0;
+  pointer-events: none;
+  animation: ember 1s ease-in-out infinite alternate;
+}
+
 @keyframes ember {
-  from { box-shadow: 0 0 0 2px rgba(255, 150, 40, .7), 0 0 8px 2px rgba(255, 98, 0, .55); }
-  to   { box-shadow: 0 0 0 4px rgba(255, 190, 70, .8), 0 0 20px 7px rgba(255, 60, 0, .85); }
+  to {
+    opacity: 1;
+  }
+}
+/* #endregion */
+
+/* #region Weather */
+/* Details card: icon + description left, temperature with high/low right, then snow and UV lines. */
+.wx {
+  margin: 0 0 10px;
+  padding: 10px 12px 8px;
+  border: 1px solid var(--ice-line);
+  border-radius: 14px;
+  color: var(--ink);
+}
+
+.wx.sunny {
+  border-color: #f7d48b;
+  background: linear-gradient(130deg, #fff8e1, #ffeccc 60%, #e7f2fc);
+}
+
+.wx.snowy {
+  border-color: #b5d1ec;
+  background: linear-gradient(130deg, #eef6fd, #dcebf9);
+}
+
+.wx.cloudy {
+  border-color: #ccd6df;
+  background: linear-gradient(130deg, #f3f6f9, #e3e9ef);
+}
+
+.wx-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.wx-icon {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, .75);
+}
+
+.wx-icon svg {
+  width: 30px;
+  height: 30px;
+}
+
+.wx.sunny .wx-icon { color: var(--wx-sunny); }
+.wx.snowy .wx-icon { color: var(--wx-snowy); }
+.wx.cloudy .wx-icon { color: var(--wx-cloudy); }
+
+.wx.sunny .wx-icon svg { animation: sun-spin 24s linear infinite; }
+
+@keyframes sun-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.wx-what {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.wx-when {
+  color: var(--ink-soft);
+  font-size: .66rem;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.wx-text {
+  font-size: .95rem;
+  font-weight: 700;
+}
+
+.wx-temps {
+  flex: none;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.wx-now {
+  display: flex;
+  justify-content: flex-end;
+  align-items: baseline;
+  gap: 4px;
+}
+
+.wx-now b {
+  font-size: 1.6rem;
+  line-height: 1;
+}
+
+.wx-now small {
+  color: var(--ink-soft);
+  font-size: .68rem;
+}
+
+.wx-range {
+  margin-top: 2px;
+  color: var(--ink-soft);
+  font-size: .78rem;
+  font-weight: 700;
+}
+
+.wx-line {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  padding: 5px 8px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, .6);
+  color: var(--ink-soft);
+  font-size: .8rem;
+  font-weight: 600;
+}
+
+.wx-line svg {
+  flex: none;
+  width: 16px;
+  height: 16px;
+}
+
+.wx-line.powder {
+  background: var(--powder-gradient);
+  color: #fff;
+  font-weight: 800;
+}
+
+.wx-line.uv { color: #8a5300; }
+
+.wx-line.uv.high {
+  background: #fde2d3;
+  color: #b42318;
+  font-weight: 800;
+  box-shadow: inset 0 0 0 1px #f4a284;
+}
+
+.popup a.wx-credit {
+  display: block;
+  margin-top: 6px;
+  color: var(--ink-soft);
+  font-size: .66rem;
+  text-align: right;
+  text-decoration: none;
+}
+
+.popup a.wx-credit:hover { text-decoration: underline; }
+
+/* Small icon after the resort name in the list. */
+.wx-mini {
+  display: inline-grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  vertical-align: -5px;
+}
+
+.wx-mini svg {
+  width: 17px;
+  height: 17px;
+}
+
+.wx-mini.sunny {
+  background: #fff4d6;
+  color: var(--wx-sunny);
+}
+
+.wx-mini.snowy {
+  background: #e3effa;
+  color: var(--wx-snowy);
+}
+
+.wx-mini.cloudy {
+  background: #edf1f5;
+  color: var(--wx-cloudy);
+}
+
+/* Weather icon on the map pin (bottom-left corner). */
+.wx-pin {
+  position: absolute;
+  bottom: -6px;
+  left: -7px;
+  display: grid;
+  place-items: center;
+  width: 19px;
+  height: 19px;
+  border: 1.5px solid #fff;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 4px rgba(10, 35, 60, .4);
+}
+
+.wx-pin svg {
+  width: 14px;
+  height: 14px;
+}
+
+.wx-pin.sunny { color: var(--wx-sunny); }
+.wx-pin.snowy { color: var(--wx-snowy); }
+.wx-pin.cloudy { color: var(--wx-cloudy); }
+/* #endregion */
+
+/* #region Resort details side panel (desktop) */
+/* The panel docks on the right of the map at full height, above the map (so the map keeps its size),
+   and scrolls on its own, so the details fit any screen height. */
+.details-panel {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  width: min(420px, 48%);
+  min-width: 320px;
+  border-left: 1px solid var(--ice-line);
+  background: #fff;
+  box-shadow: -10px 0 30px rgba(8, 30, 60, .18);
+  animation: panel-in .25s cubic-bezier(.2, .9, .3, 1);
+}
+
+@keyframes panel-in {
+  from {
+    transform: translateX(40px);
+    opacity: 0;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+
+.details-panel .sheet-close {
+  top: 10px;
+  right: 12px;
+  z-index: 1;
+}
+
+.details-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  padding: 16px 18px 20px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.details-body .popup h3 {
+  margin-right: 40px;
+  font-size: 1.15rem;
+}
+/* #endregion */
+
+/* #region Resort details sheet (phones) */
+/* Full-width sheet that slides up from the bottom, above the map, header and everything else.
+   Same content as the desktop side panel; it scrolls on its own. */
+.sheet {
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  max-height: 92vh;
+  max-height: 92dvh;
+  margin: auto 0 0;
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  border-radius: 20px 20px 0 0;
+  background: #fff;
+  color: var(--ink);
+  box-shadow: 0 -10px 40px rgba(8, 30, 60, .35);
+}
+
+.sheet[open] {
+  display: flex;
+  flex-direction: column;
+  animation: sheet-up .3s cubic-bezier(.2, .9, .3, 1);
+}
+
+.sheet::backdrop { background: rgba(8, 32, 64, .55); }
+
+@keyframes sheet-up {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: none;
+  }
+}
+
+.sheet-bar {
+  position: relative;
+  display: flex;
+  flex: none;
+  justify-content: center;
+  padding: 8px 12px 2px;
+}
+
+.sheet-handle {
+  width: 42px;
+  height: 5px;
+  border-radius: 999px;
+  background: var(--ice-line);
+}
+
+/* Round close button of the sheet and the side panel. */
+.sheet-close {
+  position: absolute;
+  top: 6px;
+  right: 10px;
+  width: 36px;
+  height: 36px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--ice);
+  color: var(--ink);
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.sheet-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  padding: 6px 16px calc(16px + env(safe-area-inset-bottom));
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.sheet-body .popup h3 {
+  margin-right: 40px;
+  font-size: 1.15rem;
+}
+/* #endregion */
+
+/* #region Compact details (narrow panel or sheet) */
+/* When the details area itself is narrow (the desktop panel on a small screen, or the phone sheet),
+   use the compact layout: smaller tiles and time column, labels wrapping beside their icon. */
+.details-body,
+.sheet-body {
+  container-type: inline-size;
+}
+
+@container (max-width: 380px) {
+  .popup .hero,
+  .popup .plan-step {
+    grid-template-columns: minmax(0, 1fr) auto 64px;
+    column-gap: 8px;
+    padding: 8px 10px;
+  }
+
+  .popup .hero-label,
+  .popup .plan-step .plan-label {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: .64rem;
+    letter-spacing: .03em;
+    white-space: normal;
+  }
+
+  .popup .hero-label svg {
+    flex: none;
+    width: 17px;
+    height: 17px;
+    margin-right: 0;
+  }
+
+  .popup .plan-label svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  .popup .hero-tiles { gap: 4px; }
+
+  .popup .hero-tile {
+    min-width: 36px;
+    padding: 4px 4px 3px;
+    border-radius: 8px;
+  }
+
+  .popup .hero-tile b { font-size: 1.1rem; }
+
+  .popup .hero-tile span {
+    font-size: .52rem;
+    letter-spacing: .06em;
+  }
+
+  .popup .when small { font-size: .54rem; }
+  .popup .when-time b { font-size: .98rem; }
+  .popup .when-time .at { font-size: .64rem; }
+  .popup .hero.night .moon { display: none; }
+  .popup .facts { font-size: .8rem; }
+
+  .popup .facts dt {
+    padding-right: 8px;
+    font-size: .62rem;
+  }
 }
 /* #endregion */
 
@@ -635,383 +1839,446 @@ input[type="search"]:focus { background: #fff; border-color: var(--accent); box-
 .welcome {
   width: min(660px, calc(100vw - 32px));
   max-height: calc(100vh - 32px);
+  max-height: calc(100dvh - 32px);
   padding: 0;
-  border: 0; border-radius: 22px;
-  color: var(--ink);
-  background: #fff;
-  box-shadow: 0 30px 80px rgba(8, 30, 60, .55);
   overflow: hidden auto;
+  border: 0;
+  border-radius: 22px;
+  background: #fff;
+  color: var(--ink);
+  box-shadow: 0 30px 80px rgba(8, 30, 60, .55);
 }
+
 .welcome[open] { animation: welcome-in .45s cubic-bezier(.2, .9, .3, 1.2); }
+
 @keyframes welcome-in {
-  from { opacity: 0; transform: translateY(24px) scale(.94); }
-  to   { opacity: 1; transform: none; }
+  from {
+    transform: translateY(24px) scale(.94);
+    opacity: 0;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
 }
-.welcome::backdrop { background: rgba(8, 32, 64, .62); backdrop-filter: blur(3px); }
+
+.welcome::backdrop {
+  background: rgba(8, 32, 64, .62);
+  -webkit-backdrop-filter: blur(3px);
+  backdrop-filter: blur(3px);
+}
 
 /* Scene: sky, rising sun, gondolas on a cable and faster snow. */
-.welcome-hero { position: relative; height: 250px; overflow: hidden; }
-.welcome-hero svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
-.welcome-hero .snow { inset: -200px 0 0 0; animation-duration: 7s; }
-.welcome-sun { transform-origin: 480px 200px; animation: sun-rise 2.4s ease-out both, sun-glow 4s ease-in-out 2.4s infinite; }
-@keyframes sun-rise { from { transform: translateY(70px); } to { transform: none; } }
-@keyframes sun-glow { 50% { transform: scale(1.07); } }
+.welcome-hero {
+  position: relative;
+  height: 250px;
+  overflow: hidden;
+}
+
+.welcome-hero svg {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.welcome-hero .snow {
+  inset: -200px 0 0 0;
+  animation-duration: 7s;
+}
+
+.welcome-sun {
+  transform-origin: 480px 200px;
+  animation: sun-rise 2.4s ease-out both, sun-glow 4s ease-in-out 2.4s infinite;
+}
+
+@keyframes sun-rise {
+  from {
+    transform: translateY(70px);
+  }
+  to {
+    transform: none;
+  }
+}
+
+@keyframes sun-glow {
+  50% {
+    transform: scale(1.07);
+  }
+}
 
 /* Kicker ("Today" / "Coming up") and title over the scene. */
-.welcome-heading { position: absolute; left: 28px; top: 24px; right: 28px; color: #fff; }
+.welcome-heading {
+  position: absolute;
+  top: 24px;
+  right: 28px;
+  left: 28px;
+  color: #fff;
+}
+
 .welcome-kicker {
   display: inline-block;
   padding: 3px 12px;
   border-radius: 999px;
-  background: #ffd65a; color: #5a3200;
-  font-size: .75rem; font-weight: 800; letter-spacing: .12em; text-transform: uppercase;
+  background: #ffd65a;
+  color: #5a3200;
+  font-size: .75rem;
+  font-weight: 800;
+  letter-spacing: .12em;
+  text-transform: uppercase;
   box-shadow: 0 2px 10px rgba(255, 190, 60, .6);
   animation: kicker-pulse 1.8s ease-in-out infinite;
 }
-@keyframes kicker-pulse { 50% { transform: scale(1.08); } }
+
+@keyframes kicker-pulse {
+  50% {
+    transform: scale(1.08);
+  }
+}
+
 .welcome h2 {
   margin: 10px 0 0;
-  font-size: clamp(1.7rem, 5vw, 2.4rem); line-height: 1.1;
+  font-size: clamp(1.7rem, 5vw, 2.4rem);
+  line-height: 1.1;
   text-shadow: 0 3px 14px rgba(5, 25, 60, .55);
 }
 
 .welcome-body { padding: 22px 28px 24px; }
-.welcome-body > p { margin: 0 0 14px; color: var(--ink-soft); font-size: 1rem; }
 
-/* Live countdown: days / hours / minutes / seconds tiles. */
-.countdown { margin-bottom: 18px; text-align: center; }
-.countdown-label {
-  font-size: .75rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase;
-  color: #c2410c; margin-bottom: 8px;
+.welcome-body > p {
+  margin: 0 0 14px;
+  color: var(--ink-soft);
+  font-size: 1rem;
 }
-.countdown-tiles { display: flex; justify-content: center; gap: 10px; }
+
+/* Live countdown: days / hours / minutes / seconds tiles (none on the powder-only screen). */
+.countdown {
+  margin-bottom: 18px;
+  text-align: center;
+}
+
+.countdown:empty { display: none; }
+
+.countdown-label {
+  margin-bottom: 8px;
+  color: #c2410c;
+  font-size: .75rem;
+  font-weight: 700;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+
+.countdown-tiles {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+
 .tile {
-  flex: 1 1 0; max-width: 110px;
+  flex: 1 1 0;
+  max-width: 110px;
   padding: 12px 6px 9px;
   border-radius: 14px;
-  color: #fff;
   background: linear-gradient(160deg, #0e3a66, #1d6fb8);
+  color: #fff;
   box-shadow: 0 6px 16px rgba(14, 58, 102, .3);
 }
-.tile b { display: block; font-size: clamp(1.6rem, 6vw, 2.3rem); line-height: 1; font-variant-numeric: tabular-nums; }
-.tile span { display: block; margin-top: 5px; font-size: .68rem; letter-spacing: .1em; text-transform: uppercase; opacity: .85; }
-.tile.seconds { background: linear-gradient(160deg, #d9482b, #c7305d); box-shadow: 0 6px 16px rgba(199, 48, 93, .3); }
+
+.tile b {
+  display: block;
+  font-size: clamp(1.6rem, 6vw, 2.3rem);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.tile span {
+  display: block;
+  margin-top: 5px;
+  font-size: .68rem;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  opacity: .85;
+}
+
+.tile.seconds {
+  background: linear-gradient(160deg, #d9482b, #c7305d);
+  box-shadow: 0 6px 16px rgba(199, 48, 93, .3);
+}
+
 /* Replaces the tiles once the countdown reaches zero. */
 .count-live {
-  padding: 14px; border-radius: 14px;
-  color: #fff; font-size: 1.2rem; font-weight: 800;
-  background: linear-gradient(135deg, #d9482b, #c7305d);
+  padding: 14px;
+  border-radius: 14px;
+  background: var(--cta-gradient);
+  color: #fff;
+  font-size: 1.2rem;
+  font-weight: 800;
 }
 
 /* Clickable resort cards inside the dialog. */
 .welcome ul {
-  list-style: none; margin: 0 0 20px; padding: 4px;
-  display: grid; gap: 8px;
-  max-height: 32vh; overflow-y: auto;
+  display: grid;
+  gap: 8px;
+  max-height: 32vh;
+  margin: 0 0 20px;
+  padding: 4px;
+  overflow-y: auto;
+  list-style: none;
 }
+
 .welcome-resort {
-  display: grid; grid-template-columns: 40px 1fr; gap: 12px; align-items: center;
-  width: 100%; padding: 12px 14px;
-  border: 1.5px solid var(--ice-line); border-radius: 14px;
-  background: var(--snow); color: inherit; text-align: left; font: inherit;
+  display: grid;
+  grid-template-columns: 40px 1fr;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 12px 14px;
+  border: 1.5px solid var(--ice-line);
+  border-radius: 14px;
+  background: var(--snow);
+  color: inherit;
+  font: inherit;
+  text-align: left;
   cursor: pointer;
   transition: transform .15s, border-color .15s, background .15s;
 }
-.welcome-resort:hover { transform: translateY(-2px); border-color: var(--accent); background: var(--ice); }
-.welcome-resort:focus-visible { outline: 3px solid #7fb8e6; outline-offset: 0; }
-.welcome-resort .badge { width: 40px; height: 40px; }
-.welcome-resort strong { display: block; font-size: 1.05rem; }
-.welcome-resort small { display: block; margin-top: 2px; color: var(--ink-soft); font-size: .85rem; }
 
-/* "Let's go" close button. */
-#welcome-close {
-  display: block; width: 100%;
-  padding: 13px 18px;
-  border: 0; border-radius: 14px;
-  background: linear-gradient(135deg, #d9482b, #c7305d);
-  color: #fff; font: inherit; font-size: 1.05rem; font-weight: 800; letter-spacing: .02em;
-  cursor: pointer;
-  box-shadow: 0 8px 20px rgba(199, 48, 93, .35);
-  transition: transform .15s, box-shadow .15s;
+.welcome-resort:hover {
+  border-color: var(--accent);
+  background: var(--ice);
+  transform: translateY(-2px);
 }
-#welcome-close:hover { transform: translateY(-2px); box-shadow: 0 12px 26px rgba(199, 48, 93, .45); }
-/* #endregion */
 
-/* #region Mobile (max-width: 800px) */
-/* Stack the map above the sidebar and tighten the header and welcome screen. */
-@media (max-width: 800px) {
-  html, body { height: auto; }
-  .layout { display: flex; flex-direction: column-reverse; }
-  .map { height: 55vh; flex: none; }
-  .sidebar { overflow: visible; border-right: 0; }
-  .site-header { padding: 14px 16px 30px; }
-  .site-header h1 { font-size: 1.3rem; }
-  .clock { position: relative; top: auto; right: auto; display: inline-block; margin-top: 8px; }
-  .welcome-hero { height: 190px; }
-  .welcome-body { padding: 18px 18px 20px; }
+.welcome-resort:focus-visible { outline-offset: 0; }
+
+.welcome-resort .badge {
+  width: 40px;
+  height: 40px;
 }
-/* #endregion */
 
-/* #region Reduced motion */
-/* Switch off every decorative animation for visitors who ask for less motion. */
-@media (prefers-reduced-motion: reduce) {
-  .snow,
-  .welcome[open], .welcome-sun, .welcome-kicker,
-  .hero.ended .hero-label svg,
-  .hero.night::before,
-  .pill.fire, .pill.fire .flame, .badge.is-new,
-  .hero.slope, .tchip.slope::after, .hero.slope::after, .hero.slope::before,
-  .tchip.slope svg, .hero.slope .hero-label svg, .hype-tag { animation: none; }
+.welcome-resort strong {
+  display: block;
+  font-size: 1.05rem;
 }
-/* #endregion */
 
-/* Countdown tiles inside the light "Wake up in" / "Start driving in" steps: same rounded squares
-   as the dark banners, tinted to each step's colors. */
-.popup .plan-step > .hero-tiles { grid-column: 2; justify-self: end; }
-.popup .plan-step { padding: 8px 12px; }
-.plan-step .hero-tile { background: rgba(255, 255, 255, .7); border: 1px solid currentColor; border-color: rgba(0, 0, 0, .12); }
-.plan-step .hero-tile span { opacity: .75; }
-.plan-step.wake .hero-tile { border-color: #f1b979; }
-.plan-step.drive .hero-tile { border-color: #a9c8e6; }
+.welcome-resort strong .pill {
+  margin-left: 8px;
+  font-size: .68rem;
+  vertical-align: 2px;
+}
 
-/* #region Opening tomorrow (fire) */
-/* Welcome screen: fiery resort cards for tomorrow's openings, a flame section heading,
-   and a fire-colored kicker when the whole screen is about tomorrow. */
+.welcome-resort small {
+  display: block;
+  margin-top: 2px;
+  color: var(--ink-soft);
+  font-size: .85rem;
+}
+
+/* Section heading inside the list: "Opening tomorrow" (fire) or "Fresh powder" (ice). */
+.welcome-section {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+  padding: 2px 4px;
+  color: #c2410c;
+  font-size: .75rem;
+  font-weight: 800;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+
+.welcome-section .flame {
+  width: 18px;
+  height: 18px;
+}
+
+.welcome-section .flame path:first-child { fill: #e2562b; }
+.welcome-section .flame path:last-child { fill: #ffc24a; }
+
+/* Opening tomorrow: fiery resort cards, and a fire-colored kicker when the whole screen is about tomorrow. */
 .welcome-resort.hot {
   border-color: #f59a5b;
   background: linear-gradient(110deg, #fff1e4, #ffe1cc 60%, #ffd2c2);
   box-shadow: 0 0 0 1px rgba(255, 140, 50, .25), 0 4px 14px rgba(226, 86, 43, .22);
   animation: hot-glow 1.6s ease-in-out infinite alternate;
 }
-.welcome-resort.hot:hover { border-color: #e2562b; background: linear-gradient(110deg, #ffe9d6, #ffd6bb 60%, #ffc7b3); }
-.welcome-resort.hot .badge { animation: ember 1s ease-in-out infinite alternate; }
-.welcome-resort strong .pill { margin-left: 8px; font-size: .68rem; vertical-align: 2px; }
+
+.welcome-resort.hot:hover {
+  border-color: #e2562b;
+  background: linear-gradient(110deg, #ffe9d6, #ffd6bb 60%, #ffc7b3);
+}
+
 @keyframes hot-glow {
-  from { box-shadow: 0 0 0 1px rgba(255, 140, 50, .25), 0 4px 12px rgba(226, 86, 43, .18); }
-  to   { box-shadow: 0 0 0 2px rgba(255, 150, 60, .45), 0 4px 20px rgba(226, 70, 20, .35); }
+  from {
+    box-shadow: 0 0 0 1px rgba(255, 140, 50, .25), 0 4px 12px rgba(226, 86, 43, .18);
+  }
+  to {
+    box-shadow: 0 0 0 2px rgba(255, 150, 60, .45), 0 4px 20px rgba(226, 70, 20, .35);
+  }
 }
-.welcome-section {
-  display: flex; align-items: center; gap: 6px;
-  margin-top: 6px; padding: 2px 4px;
-  font-size: .75rem; font-weight: 800; letter-spacing: .1em; text-transform: uppercase;
-  color: #c2410c;
+
+.welcome.hot .welcome-kicker {
+  background: linear-gradient(120deg, #ff8a1f, #e02424);
+  color: #fff;
+  box-shadow: 0 2px 12px rgba(255, 98, 0, .7);
 }
-.welcome-section .flame { width: 18px; height: 18px; }
-.welcome-section .flame path:first-child { fill: #e2562b; }
-.welcome-section .flame path:last-child { fill: #ffc24a; }
-.welcome.hot .welcome-kicker { background: linear-gradient(120deg, #ff8a1f, #e02424); color: #fff; box-shadow: 0 2px 12px rgba(255, 98, 0, .7); }
-@media (prefers-reduced-motion: reduce) { .welcome-resort.hot, .welcome-resort.hot .badge { animation: none; } }
+
+/* Fresh powder: icy-blue section and cards for resorts with fresh snow today or tomorrow. */
+.welcome-section.powder-section { color: #2563a8; }
+
+.welcome-section.powder-section svg {
+  width: 18px;
+  height: 18px;
+  color: #3b82c4;
+}
+
+.welcome-resort.powder {
+  border-color: #9cc3e8;
+  background: linear-gradient(110deg, #f0f7fe, #dcebf9 60%, #cfe3f6);
+  box-shadow: 0 4px 14px rgba(37, 99, 168, .18);
+}
+
+.welcome-resort.powder:hover {
+  border-color: #2563a8;
+  background: linear-gradient(110deg, #e6f1fd, #d0e4f7 60%, #c2dbf3);
+}
+
+.pill.powder {
+  background: var(--powder-gradient);
+  color: #fff;
+}
+
+.pill.powder svg {
+  width: 13px;
+  height: 13px;
+  margin-right: 3px;
+  vertical-align: -2px;
+}
+
+/* "Let's go" close button. */
+#welcome-close {
+  display: block;
+  width: 100%;
+  padding: 13px 18px;
+  border: 0;
+  border-radius: 14px;
+  background: var(--cta-gradient);
+  color: #fff;
+  font: inherit;
+  font-size: 1.05rem;
+  font-weight: 800;
+  letter-spacing: .02em;
+  cursor: pointer;
+  box-shadow: 0 8px 20px rgba(199, 48, 93, .35);
+  transition: transform .15s, box-shadow .15s;
+}
+
+#welcome-close:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 26px rgba(199, 48, 93, .45);
+}
 /* #endregion */
 
-/* #region Season-opening filter chips */
-/* Flame chips under the season status; pressed they turn fire-colored. */
-.chip.chip-opening { padding: 6px 12px; gap: 5px; }
-.chip.chip-opening[hidden] { display: none; }
-.chip.chip-opening .flame { width: 16px; height: 16px; flex: none; }
-.chip.chip-opening .flame path:first-child { fill: #e2562b; }
-.chip.chip-opening .flame path:last-child { fill: #ffc24a; }
-.chip.chip-opening[aria-pressed="true"] {
-  background: linear-gradient(120deg, #d9480f, #c81e1e);
-  border-color: #c81e1e; color: #fff;
-  box-shadow: 0 0 8px rgba(255, 98, 0, .45);
+/* #region Map fallback */
+/* Shown in place of the map when the map library could not be loaded. */
+.map-error {
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  color: var(--ink-soft);
+  text-align: center;
 }
-.chip.chip-opening[aria-pressed="true"] small { color: #ffe3c9; }
-.chip.chip-opening[aria-pressed="true"] .flame path:first-child { fill: #fff3c4; }
-.chip.chip-opening[aria-pressed="true"] .flame path:last-child { fill: #ff9a1f; }
 /* #endregion */
 
-/* #region Phones */
-/* Phone layout (same 800px breakpoint as above): map on top, sidebar below. Here: a taller map,
-   a details card sized to small screens, and cards that wrap instead of breaking words. */
+/* #region Phones (max-width: 800px, the same breakpoint as in app.js) */
+/* Map on top and sidebar below, a tighter header, larger tap targets, and the details in the sheet. */
 @media (max-width: 800px) {
-  .map { height: 62vh; min-height: 340px; }
+  html,
+  body {
+    height: auto;
+  }
+
+  .site-header { padding: 14px 16px 30px; }
+  .site-header h1 { font-size: 1.3rem; }
   .site-header p { font-size: .85rem; }
-  .sidebar { padding: 10px; }
+
+  .clock {
+    position: relative;
+    top: auto;
+    right: auto;
+    display: inline-block;
+    margin-top: 8px;
+  }
+
+  .layout {
+    display: flex;
+    flex-direction: column-reverse;
+  }
+
+  .map-wrap {
+    display: block;
+    flex: none;
+  }
+
+  .map {
+    flex: none;
+    height: 62vh;
+    min-height: 340px;
+  }
+
+  .sidebar {
+    padding: 10px;
+    overflow: visible;
+    border-right: 0;
+  }
 
   /* Highlight cards: resort name on its own line when space is short. */
-  .card-resort { flex-wrap: wrap; row-gap: 0; }
-
-  /* Details card: tighter frame, smaller tiles and time column so labels keep room. */
-  .leaflet-popup-content { margin: 12px 12px 10px; }
-  .popup h3 { font-size: 1.02rem; }
-  .popup .hero, .popup .plan-step { grid-template-columns: minmax(0, 1fr) auto 64px; column-gap: 8px; padding: 8px 10px; }
-  .hero-label { font-size: .64rem; letter-spacing: .04em; }
-  .hero-label svg { width: 17px; height: 17px; margin-right: 4px; vertical-align: -4px; }
-  .plan-step .plan-label { font-size: .64rem; letter-spacing: .03em; white-space: normal; }
-  .plan-label svg { width: 16px; height: 16px; }
-  .hero-tiles { gap: 4px; }
-  .hero-tile { min-width: 36px; padding: 4px 4px 3px; border-radius: 8px; }
-  .hero-tile b { font-size: 1.1rem; }
-  .hero-tile span { font-size: .52rem; letter-spacing: .06em; }
-  .when small { font-size: .54rem; }
-  .when-time b { font-size: .98rem; }
-  .when-time .at { font-size: .64rem; }
-  .hero.night .moon { display: none; }
-  /* Icon beside the label text, so a wrapped label (e.g. "Start driving / in") stays aligned. */
-  .hero-label, .plan-step .plan-label { display: flex; align-items: center; gap: 5px; }
-  .hero-label svg { flex: none; margin-right: 0; }
-  /* Pinch to zoom on phones; the +/- buttons would cover the details card. */
-  .leaflet-control-zoom { display: none; }
-  .facts { font-size: .8rem; }
-  .facts dt { padding-right: 8px; font-size: .62rem; }
+  .card-resort {
+    flex-wrap: wrap;
+    row-gap: 0;
+  }
 
   /* Larger tap targets for chips and the copy buttons. */
   .chip { min-height: 34px; }
   .copy-btn { padding: 5px 8px; }
 
-  /* Welcome screen fits short phones: smaller hero and countdown. */
+  /* Pinch to zoom on phones; the +/- buttons are not needed. */
+  .leaflet-control-zoom { display: none; }
+  .leaflet-popup-content { margin: 12px 12px 10px; }
+
+  /* The details open in the full-screen sheet, never in the side panel. */
+  .details-panel { display: none !important; }
+
+  /* Phones navigate with Google Maps instead of a route line on this map. */
+  .popup .desktop-only { display: none; }
+
+  .popup .gmaps-btn {
+    display: flex;
+    padding: 11px 12px;
+    font-size: .92rem;
+  }
+
+  /* Welcome screen fits short phones: smaller scene, title and countdown. */
+  .welcome-hero { height: 190px; }
+  .welcome-body { padding: 18px 18px 20px; }
   .welcome h2 { font-size: 1.6rem; }
   .countdown-tiles { gap: 6px; }
   .tile { padding: 9px 4px 7px; }
 }
 /* #endregion */
 
-/* #region Google Maps navigation (phones) */
-/* Phones swap "Show directions" (route line on this map) for a link that opens Google Maps. */
-.gmaps-btn {
-  display: none;
-  align-items: center; justify-content: center; gap: 8px;
-  text-align: center; text-decoration: none;
-  background: linear-gradient(120deg, #1a73e8, #1557b0);
-  box-shadow: 0 4px 12px rgba(26, 115, 232, .3);
-}
-.popup a.gmaps-btn { color: #fff; }
-.gmaps-btn svg { width: 18px; height: 18px; flex: none; }
-.gmaps-btn:hover { background: linear-gradient(120deg, #1765cc, #124a99); }
-@media (max-width: 800px) {
-  .popup .desktop-only { display: none; }
-  .popup .gmaps-btn { display: flex; padding: 11px 12px; font-size: .92rem; }
+/* #region Reduced motion */
+/* Visitors who ask for less motion get no decorative animation, transitions or smooth scrolling.
+   (app.js also pauses the welcome scene's SVG gondolas and skips map flights for them.) */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition: none !important;
+    animation: none !important;
+  }
 }
 /* #endregion */
-
-/* #region Details sheet (phones) */
-/* Full-width sheet that slides up from the bottom, above the map, header and everything else.
-   Same content as the desktop map popup; it scrolls on its own. */
-.sheet {
-  width: 100%; max-width: 100%;
-  height: auto; max-height: 92dvh;
-  margin: auto 0 0;
-  padding: 0;
-  border: 0; border-radius: 20px 20px 0 0;
-  background: #fff; color: var(--ink);
-  box-shadow: 0 -10px 40px rgba(8, 30, 60, .35);
-  overflow: hidden;
-}
-.sheet[open] { display: flex; flex-direction: column; animation: sheet-up .3s cubic-bezier(.2, .9, .3, 1); }
-.sheet::backdrop { background: rgba(8, 32, 64, .55); }
-@keyframes sheet-up { from { transform: translateY(100%); } to { transform: none; } }
-
-.sheet-bar {
-  position: relative; flex: none;
-  display: flex; justify-content: center;
-  padding: 8px 12px 2px;
-}
-.sheet-handle { width: 42px; height: 5px; border-radius: 999px; background: var(--ice-line); }
-.sheet-close {
-  position: absolute; top: 6px; right: 10px;
-  width: 36px; height: 36px;
-  border: 0; border-radius: 50%;
-  background: var(--ice); color: var(--ink);
-  font-size: 1.5rem; line-height: 1;
-  cursor: pointer;
-}
-.sheet-body {
-  flex: 1 1 auto; min-height: 0;
-  overflow-y: auto; overscroll-behavior: contain;
-  padding: 6px 16px calc(16px + env(safe-area-inset-bottom));
-}
-.sheet-body .popup h3 { margin-right: 40px; font-size: 1.15rem; }
-@media (prefers-reduced-motion: reduce) { .sheet[open] { animation: none; } }
-/* #endregion */
-
-/* #region Weather */
-/* Weather colors: warm sun, icy snow, grey cloud. */
-:root { --wx-sunny: #f59e0b; --wx-snowy: #3b82c4; --wx-cloudy: #6b7c8c; }
-
-/* Details card: icon + description left, temperature with high/low right, then snow and UV lines. */
-.wx {
-  margin: 0 0 10px; padding: 10px 12px 8px;
-  border-radius: 14px;
-  border: 1px solid var(--ice-line);
-  color: var(--ink);
-}
-.wx.sunny { background: linear-gradient(130deg, #fff8e1, #ffeccc 60%, #e7f2fc); border-color: #f7d48b; }
-.wx.snowy { background: linear-gradient(130deg, #eef6fd, #dcebf9); border-color: #b5d1ec; }
-.wx.cloudy { background: linear-gradient(130deg, #f3f6f9, #e3e9ef); border-color: #ccd6df; }
-.wx-head { display: flex; align-items: center; gap: 10px; }
-.wx-icon { flex: none; display: grid; place-items: center; width: 44px; height: 44px; border-radius: 12px; background: rgba(255, 255, 255, .75); }
-.wx-icon svg { width: 30px; height: 30px; }
-.wx.sunny .wx-icon { color: var(--wx-sunny); }
-.wx.snowy .wx-icon { color: var(--wx-snowy); }
-.wx.cloudy .wx-icon { color: var(--wx-cloudy); }
-.wx.sunny .wx-icon svg { animation: sun-spin 24s linear infinite; }
-@keyframes sun-spin { to { transform: rotate(360deg); } }
-.wx-what { flex: 1 1 auto; min-width: 0; }
-.wx-when { font-size: .66rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-soft); }
-.wx-text { font-size: .95rem; font-weight: 700; }
-.wx-temps { flex: none; text-align: right; font-variant-numeric: tabular-nums; }
-.wx-now { display: flex; align-items: baseline; justify-content: flex-end; gap: 4px; }
-.wx-now b { font-size: 1.6rem; line-height: 1; }
-.wx-now small { font-size: .68rem; color: var(--ink-soft); }
-.wx-range { margin-top: 2px; font-size: .78rem; font-weight: 700; color: var(--ink-soft); }
-.wx-line {
-  display: flex; align-items: center; gap: 6px;
-  margin-top: 8px; padding: 5px 8px;
-  border-radius: 8px;
-  background: rgba(255, 255, 255, .6);
-  font-size: .8rem; font-weight: 600; color: var(--ink-soft);
-}
-.wx-line svg { width: 16px; height: 16px; flex: none; }
-.wx-line.powder { background: linear-gradient(120deg, #2563a8, #3b82c4); color: #fff; font-weight: 800; }
-.wx-line.uv { color: #8a5300; }
-.wx-line.uv.high { background: #fde2d3; color: #b42318; font-weight: 800; box-shadow: inset 0 0 0 1px #f4a284; }
-.popup a.wx-credit { display: block; margin-top: 6px; font-size: .66rem; color: var(--ink-soft); text-align: right; text-decoration: none; }
-.popup a.wx-credit:hover { text-decoration: underline; }
-
-/* Small icon after the resort name in the list. */
-.wx-mini { display: inline-grid; place-items: center; width: 22px; height: 22px; vertical-align: -5px; border-radius: 6px; }
-.wx-mini svg { width: 17px; height: 17px; }
-.wx-mini.sunny { color: var(--wx-sunny); background: #fff4d6; }
-.wx-mini.snowy { color: var(--wx-snowy); background: #e3effa; }
-.wx-mini.cloudy { color: var(--wx-cloudy); background: #edf1f5; }
-
-/* Weather icon on the map pin (bottom-left corner). */
-.wx-pin {
-  position: absolute; bottom: -6px; left: -7px;
-  display: grid; place-items: center;
-  width: 19px; height: 19px; border-radius: 50%;
-  background: #fff; border: 1.5px solid #fff;
-  box-shadow: 0 1px 4px rgba(10, 35, 60, .4);
-}
-.wx-pin svg { width: 14px; height: 14px; }
-.wx-pin.sunny { color: var(--wx-sunny); }
-.wx-pin.snowy { color: var(--wx-snowy); }
-.wx-pin.cloudy { color: var(--wx-cloudy); }
-
-/* Filter chips "Sunny" and "Fresh powder". */
-.chip.chip-weather { padding: 6px 12px; gap: 5px; }
-.chip.chip-weather[hidden] { display: none; }
-.chip.chip-weather svg { width: 17px; height: 17px; flex: none; }
-.chip.chip-weather.sunny svg { color: var(--wx-sunny); }
-.chip.chip-weather.powder svg { color: var(--wx-snowy); }
-.chip.chip-weather.sunny[aria-pressed="true"] { background: linear-gradient(120deg, #f59e0b, #e8790c); border-color: #e8790c; color: #fff; }
-.chip.chip-weather.powder[aria-pressed="true"] { background: linear-gradient(120deg, #2563a8, #3b82c4); border-color: #2563a8; color: #fff; }
-.chip.chip-weather[aria-pressed="true"] svg, .chip.chip-weather[aria-pressed="true"] small { color: #fff; }
-@media (prefers-reduced-motion: reduce) { .wx.sunny .wx-icon svg { animation: none; } }
-/* #endregion */
-
-/* #region Welcome: fresh powder */
-/* Icy-blue section and cards for resorts with fresh snow today or tomorrow. */
-.welcome-section.powder-section { color: #2563a8; }
-.welcome-section.powder-section svg { width: 18px; height: 18px; color: #3b82c4; }
-.welcome-resort.powder {
-  border-color: #9cc3e8;
-  background: linear-gradient(110deg, #f0f7fe, #dcebf9 60%, #cfe3f6);
-  box-shadow: 0 4px 14px rgba(37, 99, 168, .18);
-}
-.welcome-resort.powder:hover { border-color: #2563a8; background: linear-gradient(110deg, #e6f1fd, #d0e4f7 60%, #c2dbf3); }
-.pill.powder { background: linear-gradient(120deg, #2563a8, #3b82c4); color: #fff; }
-.pill.powder svg { width: 13px; height: 13px; margin-right: 3px; vertical-align: -2px; }
-/* #endregion */
-/* No countdown (e.g. the powder-only welcome screen): no empty gap. */
-.countdown:empty { display: none; }

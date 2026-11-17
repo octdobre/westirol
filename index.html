@@ -3,18 +3,44 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- Content Security Policy: the page may only load this site's files, the pinned Leaflet files and
+       map tiles, and only talk to the address, routing and weather services. A new external service
+       must be added here as well as in app.js. -->
+  <meta http-equiv="Content-Security-Policy" content="
+    default-src 'self';
+    script-src 'self' https://unpkg.com/leaflet@1.9.4/;
+    style-src 'self' https://unpkg.com/leaflet@1.9.4/;
+    img-src 'self' data: https://tile.openstreetmap.org https://unpkg.com/leaflet@1.9.4/;
+    connect-src https://nominatim.openstreetmap.org https://router.project-osrm.org https://api.open-meteo.com;
+    object-src 'none';
+    base-uri 'none';
+    form-action 'self'">
   <title>West Tirol Ski Resorts</title>
+  <meta name="description"
+        content="Ski resorts across the valleys of western Tirol, Austria: season dates, lift hours, weather,
+                 driving distances and directions.">
+  <meta name="theme-color" content="#0e3a66">
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <!-- Leaflet map library, pinned by version and Subresource Integrity hash: a changed CDN file is refused. -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+  <noscript>
+    <p class="noscript">This site needs JavaScript for the map, the resort list and the timers.</p>
+  </noscript>
+
   <!-- Header: title, falling snow, mountain silhouette and the clock (filled by app.js) -->
   <header class="site-header">
     <div class="snow" aria-hidden="true"></div>
     <svg class="peaks" viewBox="0 0 1200 120" preserveAspectRatio="none" aria-hidden="true">
-      <path class="peaks-back" d="M0 120 L0 80 L90 40 L170 85 L260 25 L350 90 L450 35 L540 80 L640 15 L740 85 L830 45 L920 90 L1010 30 L1100 75 L1200 40 L1200 120 Z"/>
-      <path class="peaks-front" d="M0 120 L0 100 L120 70 L220 105 L330 60 L430 100 L560 65 L680 108 L790 72 L900 104 L1020 68 L1120 100 L1200 80 L1200 120 Z"/>
+      <path class="peaks-back"
+            d="M0 120 L0 80 L90 40 L170 85 L260 25 L350 90 L450 35 L540 80 L640 15 L740 85 L830 45 L920 90
+               L1010 30 L1100 75 L1200 40 L1200 120 Z"/>
+      <path class="peaks-front"
+            d="M0 120 L0 100 L120 70 L220 105 L330 60 L430 100 L560 65 L680 108 L790 72 L900 104 L1020 68
+               L1120 100 L1200 80 L1200 120 Z"/>
     </svg>
     <div class="header-text">
       <h1>West Tirol Ski Resorts</h1>
@@ -32,14 +58,18 @@
       <section class="panel">
         <h2>Lift type</h2>
         <div class="chips" id="type-chips" role="group" aria-label="Filter by lift type"></div>
+
         <h2 class="gap">Season status</h2>
         <div class="chips" id="status-chips" role="group" aria-label="Filter by season status"></div>
+
         <!-- Season openings: each button only shows while it has resorts (filled by app.js) -->
         <h2 class="gap" id="opening-heading" hidden>Season openings</h2>
         <div class="chips" id="opening-chips" role="group" aria-label="Filter by season opening"></div>
+
         <!-- Weather (open resorts, Open-Meteo forecast): buttons only show while they have resorts -->
         <h2 class="gap" id="weather-heading" hidden>Weather</h2>
         <div class="chips" id="weather-chips" role="group" aria-label="Filter by weather"></div>
+
         <h2 class="gap"><label for="valley-select">Valley</label></h2>
         <select id="valley-select"></select>
       </section>
@@ -48,32 +78,45 @@
       <section class="panel">
         <h2><label for="home-input">Distance from home</label></h2>
         <form id="home-form" class="home-form">
-          <input id="home-input" type="text" placeholder="e.g. Maria-Theresien-Straße 1, Innsbruck" autocomplete="street-address" required>
+          <input id="home-input" type="text" placeholder="e.g. Maria-Theresien-Straße 1, Innsbruck"
+                 autocomplete="street-address" enterkeyhint="go" required>
           <button type="submit" id="home-submit">Calculate</button>
           <button type="button" id="home-clear" class="ghost" hidden>Clear</button>
         </form>
-        <p id="home-status" class="status" role="status" aria-live="polite"></p>
+        <p id="home-status" class="status" role="status"></p>
       </section>
 
       <!-- Search and the resort list -->
       <section class="panel list-panel">
         <div class="list-head">
           <h2><label for="search-input">Resorts</label></h2>
-          <span id="list-count" class="count"></span>
+          <span id="list-count" class="count" aria-live="polite"></span>
         </div>
         <div class="search-wrap">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.8-3.8"/></svg>
-          <input id="search-input" type="search" placeholder="Search resorts by name…" autocomplete="off">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"
+               aria-hidden="true">
+            <circle cx="11" cy="11" r="7"/>
+            <path d="m20 20-3.8-3.8"/>
+          </svg>
+          <input id="search-input" type="search" placeholder="Search resorts by name…" autocomplete="off"
+                 enterkeyhint="search">
         </div>
         <ul id="resort-list" class="resort-list"></ul>
       </section>
     </aside>
 
-    <!-- OpenStreetMap map with a pin per resort -->
-    <div id="map" class="map" aria-label="Map of ski resorts"></div>
+    <!-- OpenStreetMap map with a pin per resort, and the resort details docked on its right side
+         on desktop (phones use the details sheet below instead) -->
+    <div class="map-wrap">
+      <div id="map" class="map" role="region" aria-label="Map of ski resorts"></div>
+      <aside class="details-panel" id="details-panel" aria-label="Resort details" hidden>
+        <button type="button" class="sheet-close" id="panel-close" aria-label="Close details">&times;</button>
+        <div class="details-body" id="panel-body"></div>
+      </aside>
+    </div>
   </main>
 
-  <!-- Welcome screen, shown once per day: today's openings or the next one -->
+  <!-- Welcome screen, shown once per day: today's openings or the next one, and fresh powder -->
   <dialog id="welcome" class="welcome" aria-labelledby="welcome-title">
     <div class="welcome-hero">
       <!-- Animated scene: sunset sky, rising sun, mountains and two gondolas on a cable -->
@@ -142,8 +185,9 @@
     <div class="sheet-body" id="sheet-body"></div>
   </dialog>
 
-  <!-- Leaflet map library, resort data, then the app -->
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <!-- Leaflet map library (pinned, see the head), resort data, then the app -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+          integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
   <script src="resorts.js"></script>
   <script src="app.js"></script>
 </body>
