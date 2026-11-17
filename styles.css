@@ -1,4 +1,11 @@
+/* West Tirol Ski Resorts — stylesheet.
+   Regions run top to bottom: tokens, base, page frame, sidebar controls, resort list,
+   shared labels, map details popup, day plan, welcome screen, effects, then media overrides. */
+
+/* #region Design tokens */
+/* Colors and shared sizes used throughout the page. */
 :root {
+  /* Text and surfaces */
   --ink: #12314f;
   --ink-soft: #4a6580;
   --snow: #f4f9fd;
@@ -8,13 +15,25 @@
   --sky-top: #0e3a66;
   --sky-bottom: #3f8fc9;
   --accent: #1d6fb8;
+
+  /* Lift types and the home pin */
   --gondola: #1d5fa8;
-  --chairlift: #0b8a83;
-  --tbar: #7a4fb5;
+  --chairlift: #6b7280;
+  --tbar: #f97316;
   --home: #d9482b;
+
+  /* Season status */
+  --open: #1a8a4a;
+  --prep: #b7791f;
+  --ended: #6b7c8c;
+  --last: #c2410c;
+
   --radius: 12px;
 }
+/* #endregion */
 
+/* #region Base */
+/* Box model, full-height page and form defaults. */
 * { box-sizing: border-box; }
 
 html, body { height: 100%; margin: 0; }
@@ -27,7 +46,15 @@ body {
   background: var(--snow);
 }
 
-/* ---------- Header ---------- */
+/* Form controls use the page font. */
+select, input[type="text"], button { font: inherit; }
+
+/* One focus ring for every interactive control. */
+:is(button, select, input):focus-visible { outline: 3px solid #7fb8e6; outline-offset: 1px; }
+/* #endregion */
+
+/* #region Header */
+/* Sky-blue banner with title, falling snow, mountain silhouette and clock. */
 .site-header {
   position: relative;
   flex: none;
@@ -45,17 +72,19 @@ body {
 }
 .site-header p { margin: 4px 0 0; opacity: .9; font-size: .95rem; }
 
+/* Mountain silhouette along the bottom edge. */
 .peaks { position: absolute; left: 0; bottom: -1px; width: 100%; height: 60px; z-index: 1; }
 .peaks-back { fill: rgba(255, 255, 255, .35); }
 .peaks-front { fill: var(--snow); }
 
+/* Falling snow layer (also used in the welcome screen). */
 .snow {
   position: absolute; inset: -200px 0 0 0; z-index: 1; pointer-events: none;
   background-image:
     radial-gradient(2px 2px at 20px 30px, #fff 60%, transparent),
-    radial-gradient(3px 3px at 90px 120px, rgba(255,255,255,.9) 60%, transparent),
-    radial-gradient(2px 2px at 150px 70px, rgba(255,255,255,.8) 60%, transparent),
-    radial-gradient(3px 3px at 60px 170px, rgba(255,255,255,.7) 60%, transparent),
+    radial-gradient(3px 3px at 90px 120px, rgba(255, 255, 255, .9) 60%, transparent),
+    radial-gradient(2px 2px at 150px 70px, rgba(255, 255, 255, .8) 60%, transparent),
+    radial-gradient(3px 3px at 60px 170px, rgba(255, 255, 255, .7) 60%, transparent),
     radial-gradient(2px 2px at 180px 190px, #fff 60%, transparent);
   background-size: 200px 200px;
   animation: snowfall 12s linear infinite;
@@ -64,9 +93,20 @@ body {
   from { transform: translate3d(0, 0, 0); }
   to   { transform: translate3d(30px, 200px, 0); }
 }
-@media (prefers-reduced-motion: reduce) { .snow { animation: none; } }
 
-/* ---------- Layout ---------- */
+/* Place, date and time badge in the top right corner. */
+.clock {
+  position: absolute; z-index: 2; top: 18px; right: 24px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, .16);
+  border: 1px solid rgba(255, 255, 255, .35);
+  font-size: .82rem; font-variant-numeric: tabular-nums;
+}
+/* #endregion */
+
+/* #region Layout */
+/* Sidebar on the left, map filling the rest. */
 .layout {
   flex: 1;
   min-height: 0;
@@ -84,6 +124,7 @@ body {
 }
 .map { min-height: 0; background: var(--ice); }
 
+/* White card that holds each sidebar section. */
 .panel {
   flex: none;
   background: var(--frost);
@@ -99,8 +140,39 @@ body {
   letter-spacing: .08em;
   color: var(--ink-soft);
 }
+.panel h2.gap { margin-top: 14px; }
+/* #endregion */
 
-/* ---------- Controls ---------- */
+/* #region Highlights */
+/* "Resort of the day" and "Next opening" cards at the top of the sidebar. */
+.highlights { display: grid; gap: 10px; padding: 10px; }
+.card {
+  border-radius: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--ice-line);
+  background: linear-gradient(135deg, #fff, var(--ice));
+}
+.card.pick { border-left: 4px solid var(--accent); }
+.card.next { border-left: 4px solid var(--prep); }
+.card-title {
+  font-size: .72rem; text-transform: uppercase; letter-spacing: .08em;
+  color: var(--ink-soft); margin-bottom: 4px;
+}
+/* Clickable resort line inside a card. */
+.card-resort {
+  display: flex; justify-content: space-between; align-items: baseline; gap: 10px;
+  width: 100%;
+  padding: 3px 0;
+  border: 0; background: none; color: inherit; text-align: left;
+  cursor: pointer;
+}
+.card-resort:hover .card-name { text-decoration: underline; }
+.card-name { font-weight: 700; font-size: .95rem; overflow-wrap: anywhere; }
+.card-extra { font-size: .8rem; color: var(--ink-soft); white-space: nowrap; font-variant-numeric: tabular-nums; }
+/* #endregion */
+
+/* #region Filter controls */
+/* Lift type and season status chips. */
 .chips { display: flex; flex-wrap: wrap; gap: 8px; }
 .chip {
   display: inline-flex; align-items: center; gap: 6px;
@@ -117,9 +189,10 @@ body {
 .chip[aria-pressed="false"] { opacity: .6; }
 .chip[aria-pressed="true"] { background: var(--ice); border-color: var(--accent); font-weight: 600; }
 .chip.chip-all { padding-left: 12px; }
+.chip.chip-status { padding: 6px 12px; }
 .chip small { color: var(--ink-soft); font-weight: 400; }
 
-select, input[type="text"], button { font: inherit; }
+/* Valley dropdown and address field. */
 select, input[type="text"] {
   width: 100%;
   padding: 8px 10px;
@@ -128,6 +201,10 @@ select, input[type="text"] {
   border: 1.5px solid var(--ice-line);
   border-radius: 8px;
 }
+/* #endregion */
+
+/* #region Home address form */
+/* Address input with Calculate / Clear buttons and a status line below. */
 .home-form { display: flex; flex-wrap: wrap; gap: 8px; }
 .home-form input { flex: 1 1 100%; }
 .home-form button {
@@ -140,33 +217,63 @@ select, input[type="text"] {
 .home-form button:disabled { opacity: .6; cursor: progress; }
 .status { margin: 8px 0 0; font-size: .85rem; color: var(--ink-soft); min-height: 1.2em; }
 .status.error { color: #b3261e; }
+/* #endregion */
 
-:is(button, select, input):focus-visible { outline: 3px solid #7fb8e6; outline-offset: 1px; }
+/* #region Search bar */
+/* Rounded search field with a magnifier icon inside. */
+.search-wrap { position: relative; margin: 2px 0 8px; }
+.search-wrap svg {
+  position: absolute; left: 11px; top: 50%; transform: translateY(-50%);
+  width: 17px; height: 17px; color: var(--ink-soft); pointer-events: none;
+}
+input[type="search"] {
+  width: 100%;
+  padding: 9px 12px 9px 36px;
+  color: var(--ink);
+  background: var(--snow);
+  border: 1.5px solid var(--ice-line);
+  border-radius: 999px;
+  transition: border-color .15s, box-shadow .15s, background .15s;
+}
+input[type="search"]:focus { background: #fff; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(29, 111, 184, .15); outline: none; }
+#search-input { margin-bottom: 6px; }
+/* #endregion */
 
-/* ---------- List ---------- */
+/* #region Resort list */
+/* Header line with the result count. */
 .list-panel { flex: 1 0 auto; }
 .list-head { display: flex; justify-content: space-between; align-items: baseline; }
 .count { font-size: .82rem; color: var(--ink-soft); }
-.resort-list { list-style: none; margin: 0; padding: 0; }
-.resort-list li + li { border-top: 1px solid var(--ice); }
+
+/* Each resort is a separate clickable card: badge, name + labels, distance. */
+.resort-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
 .resort {
   display: grid;
   grid-template-columns: 34px 1fr auto;
   gap: 10px; align-items: center;
   width: 100%;
-  padding: 9px 4px;
-  border: 0; background: none; color: inherit; text-align: left;
-  cursor: pointer; border-radius: 8px;
+  padding: 10px;
+  border: 1px solid var(--ice); border-radius: 10px;
+  background: #fff; color: inherit; text-align: left;
+  cursor: pointer;
 }
-.resort:hover { background: var(--snow); }
-.resort .name { font-weight: 600; font-size: .93rem; overflow-wrap: anywhere; }
-.resort .meta { font-size: .8rem; color: var(--ink-soft); overflow-wrap: anywhere; }
-.resort .dist { text-align: right; font-weight: 700; font-size: .92rem; white-space: nowrap; font-variant-numeric: tabular-nums; }
-.resort .dist small { display: block; font-weight: 400; font-size: .75rem; color: var(--ink-soft); }
-.empty { padding: 14px 4px; color: var(--ink-soft); font-size: .9rem; }
+.resort:hover { background: var(--snow); border-color: var(--ice-line); }
+.resort .body { min-width: 0; }
+.resort .name { font-weight: 600; font-size: .93rem; line-height: 1.5; overflow-wrap: anywhere; }
+.row-status { display: flex; flex-wrap: wrap; align-items: center; gap: 5px; margin-top: 4px; }
 
-/* ---------- Icons / pins ---------- */
+/* Distance and drive time on the right. */
+.resort .dist { text-align: right; font-weight: 700; font-size: .85rem; color: var(--ink); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.resort .dist small { display: block; margin-top: 1px; font-weight: 500; font-size: .74rem; color: var(--ink-soft); }
+
+/* Shown when no resort matches the filters. */
+.empty { padding: 14px 4px; color: var(--ink-soft); font-size: .9rem; }
+/* #endregion */
+
+/* #region Lift badges and status dots */
+/* Round lift-type icon used in chips, list rows, map pins and the welcome screen. */
 .badge {
+  position: relative;
   display: inline-grid; place-items: center;
   width: 34px; height: 34px;
   border-radius: 50%;
@@ -180,110 +287,310 @@ select, input[type="text"] {
 .badge.tbar { background: var(--tbar); }
 .badge.home { background: var(--home); }
 
-.popup h3 { margin: 0 0 4px; font-size: 1rem; color: var(--ink); }
-.popup p { margin: 2px 0; font-size: .85rem; color: var(--ink-soft); }
-.popup .tag { display: inline-block; margin-top: 4px; padding: 2px 8px; border-radius: 999px; color: #fff; font-size: .75rem; font-weight: 600; }
-.popup .tag.gondola { background: var(--gondola); }
-.popup .tag.chairlift { background: var(--chairlift); }
-.popup .tag.tbar { background: var(--tbar); }
-.popup a { display: inline-block; margin-top: 6px; font-size: .85rem; }
-.leaflet-popup-content-wrapper { border-radius: var(--radius); }
+/* Small colored dot for the season status (on chips and in the corner of map pins). */
+.dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; }
+.dot.open { background: var(--open); }
+.dot.prep { background: var(--prep); }
+.dot.ended { background: var(--ended); }
+.badge .dot { position: absolute; top: -3px; right: -3px; border: 2px solid #fff; width: 13px; height: 13px; }
+/* #endregion */
 
-/* ---------- Mobile ---------- */
-@media (max-width: 800px) {
-  html, body { height: auto; }
-  .layout { display: flex; flex-direction: column-reverse; }
-  .map { height: 55vh; flex: none; }
-  .sidebar { overflow: visible; border-right: 0; }
-  .site-header { padding: 14px 16px 30px; }
-  .site-header h1 { font-size: 1.3rem; }
-}
-
-/* ---------- Clock ---------- */
-.clock {
-  position: absolute; z-index: 2; top: 18px; right: 24px;
-  padding: 4px 12px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, .16);
-  border: 1px solid rgba(255, 255, 255, .35);
-  font-size: .82rem; font-variant-numeric: tabular-nums;
-}
-
-/* ---------- Status pills and dots ---------- */
-:root {
-  --open: #1a8a4a;
-  --prep: #b7791f;
-  --ended: #6b7c8c;
-  --last: #c2410c;
-}
+/* #region Labels: status pills, timer chips, parking */
+/* Status pill: "Season open", "In preparation", "Season ended", "Last days". */
 .pill {
   display: inline-block;
-  padding: 1px 8px;
-  border-radius: 999px;
-  font-size: .7rem; font-weight: 700; letter-spacing: .02em;
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-size: .7rem; font-weight: 700; letter-spacing: .02em; line-height: 1.3;
   white-space: nowrap; vertical-align: middle;
   color: #fff;
 }
+.pill svg { width: 14px; height: 14px; margin-right: 4px; vertical-align: -3px; }
 .pill.open { background: var(--open); }
 .pill.prep { background: var(--prep); }
 .pill.ended { background: var(--ended); }
 .pill.last { background: #fff; color: var(--last); box-shadow: inset 0 0 0 1.5px var(--last); }
 
-.dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; }
-.dot.open { background: var(--open); }
-.dot.prep { background: var(--prep); }
-.dot.ended { background: var(--ended); }
-.badge { position: relative; }
-.badge .dot { position: absolute; top: -3px; right: -3px; border: 2px solid #fff; width: 13px; height: 13px; }
-
-.gratis { color: var(--open); font-weight: 800; letter-spacing: .03em; }
-.timer { font-size: .8rem; font-weight: 600; color: var(--accent); }
-
-.panel h2.gap { margin-top: 14px; }
-.chip.chip-status { padding: 6px 12px; }
-
-/* ---------- Highlights ---------- */
-.highlights { display: grid; gap: 10px; padding: 10px; }
-.card {
-  border-radius: 10px;
-  padding: 10px 12px;
-  border: 1px solid var(--ice-line);
-  background: linear-gradient(135deg, #fff, var(--ice));
+/* Timer chip: label + bold countdown, e.g. "Opens in 3d 4h". */
+.tchip {
+  display: inline-flex; align-items: baseline; gap: 5px;
+  padding: 3px 9px;
+  border-radius: 6px;
+  color: #fff; font-size: .72rem; line-height: 1.3; white-space: nowrap;
+  box-shadow: 0 2px 6px rgba(14, 58, 102, .22);
 }
-.card.pick { border-left: 4px solid var(--gondola); }
-.card.next { border-left: 4px solid var(--prep); }
-.card-title {
-  font-size: .72rem; text-transform: uppercase; letter-spacing: .08em;
-  color: var(--ink-soft); margin-bottom: 4px;
+.tchip b { font-size: .86rem; font-variant-numeric: tabular-nums; letter-spacing: .01em; }
+.tchip svg { width: 15px; height: 15px; flex: none; align-self: center; }
+.tchip.opens   { background: linear-gradient(135deg, #0e3a66, #1d6fb8); }
+.tchip.lift    { background: linear-gradient(135deg, #0b8a83, #1d6fb8); }
+.tchip.running { background: linear-gradient(135deg, #1a8a4a, #0b8a83); }
+
+/* Parking price: green when free, yellow to red as the price rises. */
+.park {
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-size: .72rem; font-weight: 800; letter-spacing: .02em; line-height: 1.3;
+  white-space: nowrap;
 }
-.card-resort {
-  display: flex; justify-content: space-between; align-items: baseline; gap: 10px;
-  width: 100%;
-  padding: 3px 0;
-  border: 0; background: none; color: inherit; text-align: left;
+.park.gratis { background: #dcfce7; color: #166534; }
+.paid.low  { background: #fef3c7; color: #92400e; }
+.paid.mid  { background: #ffedd5; color: #c2410c; }
+.paid.high { background: #fee2e2; color: #b91c1c; }
+/* #endregion */
+
+/* #region Resort details popup */
+/* Leaflet popup frame. */
+.leaflet-popup-content-wrapper { border-radius: var(--radius); }
+.leaflet-popup-content { margin: 16px 16px 14px; }
+
+/* Title and the row of labels under it. */
+.popup h3 { margin: 0 22px 6px 0; font-size: 1.12rem; line-height: 1.25; color: var(--ink); }
+.popup p { margin: 2px 0; font-size: .85rem; color: var(--ink-soft); }
+.popup .pills { display: flex; flex-wrap: wrap; gap: 4px; margin: 0 0 10px; }
+
+/* Lift-type tag next to the status pill. */
+.popup .tag {
+  display: inline-block;
+  margin-top: 0;
+  padding: 3px 8px;
+  border-radius: 6px;
+  color: #fff; font-size: .75rem; font-weight: 600; line-height: 1.3;
+}
+.popup .tag.gondola { background: var(--gondola); }
+.popup .tag.chairlift { background: var(--chairlift); }
+.popup .tag.tbar { background: var(--tbar); }
+
+/* Fact table: label column on the left, value (+ copy button or chip) on the right. */
+.facts {
+  display: grid; grid-template-columns: auto 1fr; gap: 0;
+  margin: 10px 0 10px;
+  font-size: .85rem;
+}
+.facts dt, .facts dd { margin: 0; padding: 6px 0; border-top: 1px solid var(--ice); }
+.facts dt {
+  display: flex; align-items: center; align-self: stretch;
+  padding-right: 14px;
+  font-size: .7rem; font-weight: 700; letter-spacing: .07em; text-transform: uppercase;
+  color: var(--ink-soft); white-space: nowrap;
+}
+.facts dd {
+  display: flex; flex-wrap: nowrap; align-items: center; justify-content: space-between; gap: 6px;
+  color: var(--ink); font-weight: 600; overflow-wrap: anywhere;
+}
+.facts dd > span:first-child { flex: 1 1 0; min-width: 0; }
+.facts .tchip { flex: none; box-shadow: none; }
+.popup .facts .park { font-size: .8rem; }
+
+/* Small "Copy" button next to the address and GPS values. */
+.copy-btn {
+  display: inline-flex; align-items: center; gap: 4px; flex: none;
+  padding: 3px 8px;
+  border: 1.5px solid var(--ice-line); border-radius: 6px;
+  background: var(--snow); color: var(--accent);
+  font: inherit; font-size: .72rem; font-weight: 700;
   cursor: pointer;
+  transition: background .15s, border-color .15s, color .15s;
 }
-.card-resort:hover .card-name { text-decoration: underline; }
-.card-name { font-weight: 700; font-size: .95rem; overflow-wrap: anywhere; }
-.card-extra { font-size: .8rem; color: var(--ink-soft); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.copy-btn svg { width: 13px; height: 13px; }
+.copy-btn:hover { background: var(--ice); border-color: var(--accent); }
+.copy-btn.done { background: #dcfce7; border-color: #86efac; color: #166534; }
 
-/* ---------- Search and list rows ---------- */
-#search-input { margin-bottom: 6px; }
-.resort { align-items: start; }
-.resort .body { min-width: 0; }
-.resort .name { line-height: 1.5; }
-.resort .meta, .resort .timer { margin-top: 2px; }
-
-/* ---------- Popup ---------- */
-.popup .pills { display: flex; flex-wrap: wrap; gap: 4px; margin: 2px 0 6px; }
-.popup .tag { margin-top: 0; }
-.popup p.timer { color: var(--accent); font-size: .88rem; }
-
-@media (max-width: 800px) {
-  .clock { position: relative; top: auto; right: auto; display: inline-block; margin-top: 8px; }
+/* "Show directions" button at the bottom, with a hint when no home address is set. */
+.route-btn {
+  display: block; width: 100%; margin-top: 0; padding: 9px 12px;
+  border: 0; border-radius: 10px;
+  background: var(--home); color: #fff;
+  font: inherit; font-size: .88rem; font-weight: 700;
+  cursor: pointer;
+  transition: background .15s;
 }
+.route-btn:hover:not(:disabled) { background: #b93a20; }
+.route-btn:disabled { opacity: .5; cursor: not-allowed; }
+.popup p.route-hint { margin: 6px 0 0; font-size: .78rem; text-align: center; }
+/* #endregion */
 
-/* ---------- Welcome screen ---------- */
+/* #region Hero banners */
+/* Big colored banner at the top of the details: label + note on the left, countdown tiles on the right. */
+.hero {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  margin: 0 0 8px; padding: 10px 12px;
+  border-radius: 14px;
+  color: #fff;
+}
+.hero-label { font-size: .72rem; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; }
+.hero-label svg { width: 20px; height: 20px; margin-right: 6px; vertical-align: -5px; }
+.hero-note { margin-top: 2px; font-size: .8rem; opacity: .9; }
+
+/* Countdown tiles, e.g. "12 HOURS | 45 MIN". */
+.hero-tiles { display: flex; gap: 6px; flex: none; }
+.hero-tile {
+  min-width: 52px; padding: 6px 6px 5px;
+  border-radius: 10px; text-align: center;
+  background: rgba(255, 255, 255, .18);
+  border: 1px solid rgba(255, 255, 255, .3);
+}
+.hero-tile b { display: block; font-size: 1.45rem; line-height: 1; font-variant-numeric: tabular-nums; }
+.hero-tile span { display: block; margin-top: 3px; font-size: .6rem; letter-spacing: .1em; text-transform: uppercase; opacity: .9; }
+
+/* "Season opens in" (in preparation). */
+.hero.opens { background: linear-gradient(135deg, #0e3a66, #2a78bf); }
+
+/* "See you next season!" (season ended) with a waving hand. */
+.hero.ended { justify-content: center; padding: 16px 12px; background: linear-gradient(135deg, #51667a, #7d93a8); }
+.hero.ended .hero-label { font-size: .95rem; letter-spacing: .04em; text-transform: none; }
+.hero.ended .hero-label svg { width: 22px; height: 22px; animation: wave 1.6s ease-in-out infinite; transform-origin: 60% 90%; }
+@keyframes wave { 0%, 100% { transform: rotate(0); } 25% { transform: rotate(16deg); } 75% { transform: rotate(-10deg); } }
+/* #endregion */
+
+/* #region Day plan */
+/* Go to bed -> Wake up at -> Start driving -> On the slope, joined by dashed gap lines. */
+.plan { margin: 0 0 8px; }
+.plan .hero { margin: 0; }
+
+/* "Go to bed" night card: starry sky, crescent moon and moon-yellow text. */
+.hero.night {
+  position: relative; overflow: hidden; isolation: isolate;
+  background:
+    radial-gradient(1.5px 1.5px at 18% 22%, #fff 70%, transparent),
+    radial-gradient(1px 1px at 34% 70%, rgba(255, 255, 255, .8) 70%, transparent),
+    radial-gradient(1.5px 1.5px at 52% 18%, rgba(255, 255, 255, .9) 70%, transparent),
+    radial-gradient(1px 1px at 63% 78%, rgba(255, 255, 255, .7) 70%, transparent),
+    radial-gradient(1px 1px at 8% 80%, rgba(255, 255, 255, .7) 70%, transparent),
+    radial-gradient(1.5px 1.5px at 44% 45%, rgba(255, 255, 255, .6) 70%, transparent),
+    linear-gradient(160deg, #0b1230, #1c1f5a 55%, #33256e);
+  box-shadow: 0 6px 16px rgba(20, 16, 70, .35);
+}
+/* Extra stars that twinkle. */
+.hero.night::before {
+  content: ""; position: absolute; inset: 0; z-index: -1;
+  background:
+    radial-gradient(1.5px 1.5px at 26% 40%, #fff 70%, transparent),
+    radial-gradient(1.5px 1.5px at 58% 60%, #fff 70%, transparent),
+    radial-gradient(1px 1px at 12% 50%, #fff 70%, transparent);
+  animation: twinkle 3.2s ease-in-out infinite alternate;
+}
+@keyframes twinkle { from { opacity: .2; } to { opacity: 1; } }
+/* Crescent moon: a circle drawn only by its inset shadow. */
+.hero.night .moon {
+  position: absolute; top: 7px; right: 134px; z-index: -1;
+  width: 18px; height: 18px; border-radius: 50%;
+  box-shadow: inset -5px 2px 0 0 #ffe9a8;
+  filter: drop-shadow(0 0 6px rgba(255, 233, 168, .6));
+}
+.hero.night:not(:has(.hero-tiles)) .moon { right: 16px; }
+.hero.night .hero-label { color: #ffe9a8; }
+.hero.night .hero-label svg { width: 22px; height: 22px; color: #fff; }
+.hero.night .hero-tile { background: rgba(255, 255, 255, .1); border-color: rgba(255, 233, 168, .35); }
+.hero.night .hero-tile b { color: #ffe9a8; }
+
+/* "Wake up at" and "Start driving" rows: icon + label left, clock time right. */
+.plan-step {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  padding: 8px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--ice-line);
+}
+.plan-label {
+  display: inline-flex; align-items: center; gap: 7px;
+  font-size: .72rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase;
+}
+.plan-label svg { width: 18px; height: 18px; flex: none; }
+.plan-time { font-size: 1.05rem; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.plan-step.wake { background: linear-gradient(120deg, #fff4d6, #ffe2c2); border-color: #f6c98b; color: #7a3e00; }
+.plan-step.drive { background: linear-gradient(120deg, #e8f1fb, #d6e7f7); border-color: #b5d1ec; color: #0e3a66; }
+
+/* Dashed connector with the time between two steps, e.g. "sleep 8 h". */
+.plan-gap {
+  position: relative;
+  margin: 0 0 0 21px; padding: 4px 0 4px 16px;
+  border-left: 2px dashed var(--ice-line);
+  font-size: .72rem; color: var(--ink-soft);
+}
+/* #endregion */
+
+/* #region On the slope (hype) */
+/* Deep red background so white text stays readable; motion is slow and sparse. */
+.tchip.slope, .hero.slope { position: relative; overflow: hidden; isolation: isolate; }
+.tchip.slope { background: linear-gradient(120deg, #a81e3a, #8a1c4c); box-shadow: 0 2px 6px rgba(120, 20, 50, .3); }
+.hero.slope {
+  background: linear-gradient(120deg, #b3262f, #8a1c4c 55%, #a81e3a);
+  background-size: 200% 100%;
+  box-shadow: 0 6px 16px rgba(120, 20, 50, .28);
+  animation: hype-drift 14s ease-in-out infinite alternate;
+}
+@keyframes hype-drift { to { background-position: 100% 0; } }
+
+/* A soft light sweep, once every few seconds. */
+.tchip.slope::after, .hero.slope::after {
+  content: ""; position: absolute; top: 0; bottom: 0; left: -60%; width: 35%; z-index: -1;
+  background: linear-gradient(100deg, transparent, rgba(255, 255, 255, .16), transparent);
+  transform: skewX(-20deg);
+  animation: hype-shine 7s ease-in-out infinite;
+}
+@keyframes hype-shine { 0%, 70% { left: -60%; } 100% { left: 130%; } }
+
+/* Faint speed lines drifting slowly. */
+.hero.slope::before {
+  content: ""; position: absolute; inset: 0; z-index: -1; opacity: .07;
+  background: repeating-linear-gradient(100deg, transparent 0 34px, #fff 34px 35px, transparent 35px 90px);
+  animation: speed-lines 6s linear infinite;
+}
+@keyframes speed-lines { from { background-position: 0 0; } to { background-position: -180px 0; } }
+
+/* The skier icon carves gently. */
+.tchip.slope svg, .hero.slope .hero-label svg { animation: ski-carve 1.8s ease-in-out infinite alternate; transform-origin: 50% 80%; }
+@keyframes ski-carve {
+  from { transform: translateX(-1px) rotate(-7deg); }
+  to   { transform: translateX(1px) rotate(6deg); }
+}
+.hero.slope .hero-label svg { width: 24px; height: 24px; }
+.hero.slope .hero-note { opacity: 1; }
+.hero.slope .hero-tile { background: rgba(40, 0, 15, .32); border-color: rgba(255, 255, 255, .28); }
+.hero.slope .hero-tile span { opacity: 1; }
+
+/* Tilted yellow tag: "Go go go!", "Gear up!", "Fresh tracks await". */
+.hype-tag {
+  display: inline-block; margin-top: 6px;
+  padding: 2px 9px;
+  border-radius: 6px;
+  background: #ffe9a3; color: #5a2300;
+  font-size: .72rem; font-weight: 900; letter-spacing: .08em; text-transform: uppercase;
+  transform: rotate(-2deg);
+  animation: hype-bounce 2.4s ease-in-out infinite alternate;
+}
+@keyframes hype-bounce { from { transform: rotate(-2deg) scale(1); } to { transform: rotate(-1deg) scale(1.04); } }
+/* #endregion */
+
+/* #region Recently opened (fire) */
+/* Flame pill, warm row highlight and glowing map pin for resorts that opened in the last days. */
+.pill.fire {
+  color: #fff;
+  background: linear-gradient(120deg, #d9480f, #c81e1e);
+  box-shadow: 0 0 8px rgba(255, 98, 0, .45);
+  text-shadow: 0 1px 2px rgba(120, 20, 0, .5);
+}
+/* Only the flame moves: it grows and shrinks. */
+.pill.fire .flame { transform-origin: 50% 90%; animation: flame-flicker .9s ease-in-out infinite alternate; }
+@keyframes flame-flicker {
+  from { transform: scale(.9); }
+  to   { transform: scale(1.25); }
+}
+.resort.is-new {
+  background: linear-gradient(90deg, rgba(255, 122, 24, .14), rgba(255, 122, 24, 0) 70%);
+  border-color: rgba(255, 122, 24, .35);
+  box-shadow: inset 3px 0 0 #ff7a18;
+}
+.resort.is-new:hover { background: linear-gradient(90deg, rgba(255, 122, 24, .22), rgba(255, 122, 24, .04) 70%); }
+.badge.is-new { animation: ember 1s ease-in-out infinite alternate; }
+@keyframes ember {
+  from { box-shadow: 0 0 0 2px rgba(255, 150, 40, .7), 0 0 8px 2px rgba(255, 98, 0, .55); }
+  to   { box-shadow: 0 0 0 4px rgba(255, 190, 70, .8), 0 0 20px 7px rgba(255, 60, 0, .85); }
+}
+/* #endregion */
+
+/* #region Welcome screen */
+/* Once-a-day dialog: animated mountain scene, countdown to the next opening, resort list. */
 .welcome {
   width: min(660px, calc(100vw - 32px));
   max-height: calc(100vh - 32px);
@@ -301,6 +608,7 @@ select, input[type="text"] {
 }
 .welcome::backdrop { background: rgba(8, 32, 64, .62); backdrop-filter: blur(3px); }
 
+/* Scene: sky, rising sun, gondolas on a cable and faster snow. */
 .welcome-hero { position: relative; height: 250px; overflow: hidden; }
 .welcome-hero svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
 .welcome-hero .snow { inset: -200px 0 0 0; animation-duration: 7s; }
@@ -308,6 +616,7 @@ select, input[type="text"] {
 @keyframes sun-rise { from { transform: translateY(70px); } to { transform: none; } }
 @keyframes sun-glow { 50% { transform: scale(1.07); } }
 
+/* Kicker ("Today" / "Coming up") and title over the scene. */
 .welcome-heading { position: absolute; left: 28px; top: 24px; right: 28px; color: #fff; }
 .welcome-kicker {
   display: inline-block;
@@ -328,6 +637,7 @@ select, input[type="text"] {
 .welcome-body { padding: 22px 28px 24px; }
 .welcome-body > p { margin: 0 0 14px; color: var(--ink-soft); font-size: 1rem; }
 
+/* Live countdown: days / hours / minutes / seconds tiles. */
 .countdown { margin-bottom: 18px; text-align: center; }
 .countdown-label {
   font-size: .75rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase;
@@ -345,12 +655,14 @@ select, input[type="text"] {
 .tile b { display: block; font-size: clamp(1.6rem, 6vw, 2.3rem); line-height: 1; font-variant-numeric: tabular-nums; }
 .tile span { display: block; margin-top: 5px; font-size: .68rem; letter-spacing: .1em; text-transform: uppercase; opacity: .85; }
 .tile.seconds { background: linear-gradient(160deg, #d9482b, #c7305d); box-shadow: 0 6px 16px rgba(199, 48, 93, .3); }
+/* Replaces the tiles once the countdown reaches zero. */
 .count-live {
   padding: 14px; border-radius: 14px;
   color: #fff; font-size: 1.2rem; font-weight: 800;
   background: linear-gradient(135deg, #d9482b, #c7305d);
 }
 
+/* Clickable resort cards inside the dialog. */
 .welcome ul {
   list-style: none; margin: 0 0 20px; padding: 4px;
   display: grid; gap: 8px;
@@ -370,6 +682,7 @@ select, input[type="text"] {
 .welcome-resort strong { display: block; font-size: 1.05rem; }
 .welcome-resort small { display: block; margin-top: 2px; color: var(--ink-soft); font-size: .85rem; }
 
+/* "Let's go" close button. */
 #welcome-close {
   display: block; width: 100%;
   padding: 13px 18px;
@@ -381,289 +694,32 @@ select, input[type="text"] {
   transition: transform .15s, box-shadow .15s;
 }
 #welcome-close:hover { transform: translateY(-2px); box-shadow: 0 12px 26px rgba(199, 48, 93, .45); }
+/* #endregion */
 
-@media (prefers-reduced-motion: reduce) {
-  .welcome[open], .welcome-sun, .welcome-kicker { animation: none; }
-}
+/* #region Mobile (max-width: 800px) */
+/* Stack the map above the sidebar and tighten the header and welcome screen. */
 @media (max-width: 800px) {
+  html, body { height: auto; }
+  .layout { display: flex; flex-direction: column-reverse; }
+  .map { height: 55vh; flex: none; }
+  .sidebar { overflow: visible; border-right: 0; }
+  .site-header { padding: 14px 16px 30px; }
+  .site-header h1 { font-size: 1.3rem; }
+  .clock { position: relative; top: auto; right: auto; display: inline-block; margin-top: 8px; }
   .welcome-hero { height: 190px; }
   .welcome-body { padding: 18px 18px 20px; }
 }
+/* #endregion */
 
-/* ---------- Search bar ---------- */
-.search-wrap { position: relative; margin: 2px 0 8px; }
-.search-wrap svg {
-  position: absolute; left: 11px; top: 50%; transform: translateY(-50%);
-  width: 17px; height: 17px; color: var(--ink-soft); pointer-events: none;
-}
-input[type="search"] {
-  width: 100%;
-  padding: 9px 12px 9px 36px;
-  color: var(--ink);
-  background: var(--snow);
-  border: 1.5px solid var(--ice-line);
-  border-radius: 999px;
-  transition: border-color .15s, box-shadow .15s, background .15s;
-}
-input[type="search"]:focus { background: #fff; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(29, 111, 184, .15); outline: none; }
-
-/* ---------- Parking ---------- */
-.paid { padding: 1px 8px; border-radius: 999px; font-weight: 800; }
-.paid.low  { background: #fef3c7; color: #92400e; }
-.paid.mid  { background: #ffedd5; color: #c2410c; }
-.paid.high { background: #fee2e2; color: #b91c1c; }
-
-/* ---------- Compact list rows ---------- */
-.resort { align-items: center; padding: 10px 4px; }
-.row-status { display: flex; flex-wrap: wrap; align-items: center; gap: 5px; margin-top: 4px; }
-.resort .dist { font-size: .85rem; color: var(--ink-soft); font-weight: 700; }
-
-.tchip {
-  display: inline-flex; align-items: baseline; gap: 5px;
-  padding: 2px 10px;
-  border-radius: 999px;
-  color: #fff; font-size: .72rem; white-space: nowrap;
-  box-shadow: 0 2px 6px rgba(14, 58, 102, .22);
-}
-.tchip b { font-size: .86rem; font-variant-numeric: tabular-nums; letter-spacing: .01em; }
-.tchip.opens   { background: linear-gradient(135deg, #0e3a66, #1d6fb8); }
-.tchip.lift    { background: linear-gradient(135deg, #0b8a83, #1d6fb8); }
-.tchip.slope   { background: linear-gradient(135deg, #d9482b, #c7305d); box-shadow: 0 2px 8px rgba(199, 48, 93, .35); }
-.tchip.running { background: linear-gradient(135deg, #1a8a4a, #0b8a83); }
-
-/* ---------- Resort details popup ---------- */
-.leaflet-popup-content { margin: 16px 16px 14px; }
-.popup h3 { font-size: 1.12rem; line-height: 1.25; margin: 0 22px 6px 0; }
-.popup .pills { margin: 0 0 10px; }
-
-.hero {
-  display: flex; align-items: center; justify-content: space-between; gap: 10px;
-  margin: 0 0 8px; padding: 10px 12px;
-  border-radius: 14px;
-  color: #fff;
-}
-.hero.opens   { background: linear-gradient(135deg, #0e3a66, #2a78bf); }
-.hero.lift    { background: linear-gradient(135deg, #0b8a83, #1d6fb8); }
-.hero.slope   { background: linear-gradient(135deg, #e2562b, #c7305d); box-shadow: 0 6px 16px rgba(199, 48, 93, .3); }
-.hero.running { background: linear-gradient(135deg, #1a8a4a, #0b8a83); }
-.hero-label { font-size: .72rem; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; }
-.hero-note { margin-top: 2px; font-size: .8rem; opacity: .9; }
-.hero-tiles { display: flex; gap: 6px; flex: none; }
-.hero-tile {
-  min-width: 52px; padding: 6px 6px 5px;
-  border-radius: 10px; text-align: center;
-  background: rgba(255, 255, 255, .18);
-  border: 1px solid rgba(255, 255, 255, .3);
-}
-.hero-tile b { display: block; font-size: 1.45rem; line-height: 1; font-variant-numeric: tabular-nums; }
-.hero-tile span { display: block; margin-top: 3px; font-size: .6rem; letter-spacing: .1em; text-transform: uppercase; opacity: .9; }
-.hero.slope .hero-tile b { animation: slope-pop 2.4s ease-in-out infinite; }
-@keyframes slope-pop { 50% { transform: scale(1.1); } }
-@media (prefers-reduced-motion: reduce) { .hero.slope .hero-tile b { animation: none; } }
-
-.facts {
-  display: grid; grid-template-columns: auto 1fr; gap: 0;
-  margin: 10px 0 10px;
-  font-size: .85rem;
-}
-.facts dt, .facts dd { margin: 0; padding: 6px 0; border-top: 1px solid var(--ice); }
-.facts dt {
-  padding-right: 14px;
-  font-size: .7rem; font-weight: 700; letter-spacing: .07em; text-transform: uppercase;
-  color: var(--ink-soft); white-space: nowrap; align-self: stretch; display: flex; align-items: center;
-}
-.facts dd { color: var(--ink); font-weight: 600; overflow-wrap: anywhere; }
-.popup a.popup-link {
-  display: block; margin: 0; padding: 8px 12px;
-  border-radius: 10px; text-align: center; text-decoration: none; font-weight: 700;
-  background: var(--ice); color: var(--accent);
-}
-.popup a.popup-link:hover { background: var(--ice-line); }
-
-/* ---------- Labels as rounded squares ---------- */
-.pill, .tchip, .park, .popup .tag {
-  border-radius: 6px;
-  padding: 3px 8px;
-  line-height: 1.3;
-}
-.tchip { padding: 3px 9px; }
-.park { display: inline-block; font-size: .72rem; font-weight: 800; letter-spacing: .02em; white-space: nowrap; }
-.park.gratis { background: #dcfce7; color: #166534; }
-.pill.last { box-shadow: inset 0 0 0 1.5px var(--last); }
-.popup .facts .park { font-size: .8rem; }
-.resort .dist { color: var(--ink); }
-.resort .dist small { display: block; margin-top: 1px; font-size: .74rem; font-weight: 500; color: var(--ink-soft); }
-
-/* ---------- Details: copy buttons, inline chips, season-ended banner ---------- */
-.facts dd { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
-.facts dd > span:first-child { flex: 1 1 auto; min-width: 0; }
-.copy-btn {
-  display: inline-flex; align-items: center; gap: 4px; flex: none;
-  padding: 3px 8px;
-  border: 1.5px solid var(--ice-line); border-radius: 6px;
-  background: var(--snow); color: var(--accent);
-  font: inherit; font-size: .72rem; font-weight: 700;
-  cursor: pointer;
-  transition: background .15s, border-color .15s, color .15s;
-}
-.copy-btn svg { width: 13px; height: 13px; }
-.copy-btn:hover { background: var(--ice); border-color: var(--accent); }
-.copy-btn.done { background: #dcfce7; border-color: #86efac; color: #166534; }
-.facts .tchip { flex: none; box-shadow: none; }
-.hero.ended { justify-content: center; padding: 16px 12px; background: linear-gradient(135deg, #51667a, #7d93a8); }
-.hero.ended .hero-label { font-size: .95rem; letter-spacing: .04em; text-transform: none; }
-.facts dd { flex-wrap: nowrap; justify-content: space-between; }
-.facts dd > span:first-child { flex: 1 1 0; }
-
-/* ---------- Status icons ---------- */
-.pill svg { width: 14px; height: 14px; margin-right: 4px; vertical-align: -3px; }
-.tchip svg { width: 15px; height: 15px; flex: none; align-self: center; }
-.hero-label svg { width: 20px; height: 20px; margin-right: 6px; vertical-align: -5px; }
-.hero.ended .hero-label svg { width: 22px; height: 22px; animation: wave 1.6s ease-in-out infinite; transform-origin: 60% 90%; }
-@keyframes wave { 0%, 100% { transform: rotate(0); } 25% { transform: rotate(16deg); } 75% { transform: rotate(-10deg); } }
-@media (prefers-reduced-motion: reduce) { .hero.ended .hero-label svg { animation: none; } }
-
-/* ---------- Fire: newly opened resorts ---------- */
-.pill.fire {
-  color: #fff;
-  background: linear-gradient(120deg, #d9480f, #c81e1e);
-  box-shadow: 0 0 8px rgba(255, 98, 0, .45);
-  text-shadow: 0 1px 2px rgba(120, 20, 0, .5);
-}
-/* Only the flame moves: it grows and shrinks. */
-.pill.fire .flame { transform-origin: 50% 90%; animation: flame-flicker .9s ease-in-out infinite alternate; }
-@keyframes flame-flicker {
-  from { transform: scale(.9); }
-  to   { transform: scale(1.25); }
-}
-.resort.is-new { background: linear-gradient(90deg, rgba(255, 122, 24, .14), rgba(255, 122, 24, 0) 70%); box-shadow: inset 3px 0 0 #ff7a18; }
-.resort.is-new:hover { background: linear-gradient(90deg, rgba(255, 122, 24, .22), rgba(255, 122, 24, .04) 70%); }
-.badge.is-new { animation: ember 1s ease-in-out infinite alternate; }
-@keyframes ember {
-  from { box-shadow: 0 0 0 2px rgba(255, 150, 40, .7), 0 0 8px 2px rgba(255, 98, 0, .55); }
-  to   { box-shadow: 0 0 0 4px rgba(255, 190, 70, .8), 0 0 20px 7px rgba(255, 60, 0, .85); }
-}
-
-/* ---------- Hype: time to slope (calm version) ---------- */
-/* Deep, steady background so the white text always has strong contrast; motion is slow and sparse. */
-.tchip.slope, .hero.slope { position: relative; overflow: hidden; isolation: isolate; }
-.tchip.slope { background: linear-gradient(120deg, #a81e3a, #8a1c4c); box-shadow: 0 2px 6px rgba(120, 20, 50, .3); }
-.hero.slope {
-  background: linear-gradient(120deg, #b3262f, #8a1c4c 55%, #a81e3a);
-  background-size: 200% 100%;
-  box-shadow: 0 6px 16px rgba(120, 20, 50, .28);
-  animation: hype-drift 14s ease-in-out infinite alternate;
-}
-@keyframes hype-drift { to { background-position: 100% 0; } }
-
-/* a soft light sweep, once every few seconds */
-.tchip.slope::after, .hero.slope::after {
-  content: ""; position: absolute; top: 0; bottom: 0; left: -60%; width: 35%; z-index: -1;
-  background: linear-gradient(100deg, transparent, rgba(255, 255, 255, .16), transparent);
-  transform: skewX(-20deg);
-  animation: hype-shine 7s ease-in-out infinite;
-}
-@keyframes hype-shine { 0%, 70% { left: -60%; } 100% { left: 130%; } }
-
-/* faint speed lines drifting slowly */
-.hero.slope::before {
-  content: ""; position: absolute; inset: 0; z-index: -1; opacity: .07;
-  background: repeating-linear-gradient(100deg, transparent 0 34px, #fff 34px 35px, transparent 35px 90px);
-  animation: speed-lines 6s linear infinite;
-}
-@keyframes speed-lines { from { background-position: 0 0; } to { background-position: -180px 0; } }
-
-/* the skier carves gently */
-.tchip.slope svg, .hero.slope .hero-label svg { animation: ski-carve 1.8s ease-in-out infinite alternate; transform-origin: 50% 80%; }
-@keyframes ski-carve {
-  from { transform: translateX(-1px) rotate(-7deg); }
-  to   { transform: translateX(1px) rotate(6deg); }
-}
-.hero.slope .hero-label svg { width: 24px; height: 24px; }
-.hero.slope .hero-note { opacity: 1; }
-.hero.slope .hero-tile { background: rgba(40, 0, 15, .32); border-color: rgba(255, 255, 255, .28); }
-.hero.slope .hero-tile b { animation: none; }
-.hero.slope .hero-tile span { opacity: 1; }
-
-.hype-tag {
-  display: inline-block; margin-top: 6px;
-  padding: 2px 9px;
-  border-radius: 6px;
-  background: #ffe9a3; color: #5a2300;
-  font-size: .72rem; font-weight: 900; letter-spacing: .08em; text-transform: uppercase;
-  transform: rotate(-2deg);
-  animation: hype-bounce 2.4s ease-in-out infinite alternate;
-}
-@keyframes hype-bounce { from { transform: rotate(-2deg) scale(1); } to { transform: rotate(-1deg) scale(1.04); } }
-
+/* #region Reduced motion */
+/* Switch off every decorative animation for visitors who ask for less motion. */
 @media (prefers-reduced-motion: reduce) {
+  .snow,
+  .welcome[open], .welcome-sun, .welcome-kicker,
+  .hero.ended .hero-label svg,
+  .hero.night::before,
   .pill.fire, .pill.fire .flame, .badge.is-new,
   .hero.slope, .tchip.slope::after, .hero.slope::after, .hero.slope::before,
   .tchip.slope svg, .hero.slope .hero-label svg, .hype-tag { animation: none; }
 }
-
-/* ---------- List rows as separate cards ---------- */
-.resort-list { display: grid; gap: 8px; }
-.resort-list li + li { border-top: 0; }
-.resort { padding: 10px; border: 1px solid var(--ice); border-radius: 10px; background: #fff; }
-.resort:hover { border-color: var(--ice-line); }
-.resort.is-new { border-color: rgba(255, 122, 24, .35); }
-
-
-/* ---------- "Opened today" switch ---------- */
-.switch-row {
-  display: flex; align-items: center; gap: 6px;
-  width: 100%;
-  margin-top: 14px; padding: 9px 10px 9px 12px;
-  border: 1.5px solid var(--ice-line); border-radius: 14px;
-  background: var(--snow); color: var(--ink);
-  font: inherit; font-size: .9rem; font-weight: 700; text-align: left;
-  cursor: pointer;
-  transition: background .3s, border-color .3s, box-shadow .3s;
-}
-.switch-row > .flame { width: 18px; height: 18px; flex: none; }
-.switch-row > .flame path:first-child { fill: #e2562b; }
-.switch-row small { color: var(--ink-soft); font-weight: 400; }
-.switch-row[aria-checked="true"] {
-  background: linear-gradient(120deg, #fff4ea, #ffe6d6);
-  border-color: #f2a273;
-  box-shadow: 0 4px 14px rgba(226, 86, 43, .18);
-}
-
-.switch-track {
-  position: relative; flex: none; margin-left: auto;
-  width: 58px; height: 30px;
-  border-radius: 999px;
-  background: linear-gradient(180deg, #9db9d3, #c3d8ea);
-  box-shadow: inset 0 2px 5px rgba(14, 58, 102, .35);
-  transition: background .35s, box-shadow .35s;
-}
-.switch-thumb {
-  position: absolute; top: 3px; left: 3px;
-  display: grid; place-items: center;
-  width: 24px; height: 24px;
-  border-radius: 50%;
-  background: linear-gradient(160deg, #fff, #e6f0f9);
-  box-shadow: 0 2px 5px rgba(10, 35, 60, .45);
-  transition: transform .4s cubic-bezier(.3, 1.5, .5, 1), background .35s;
-}
-.switch-thumb svg { grid-area: 1 / 1; width: 15px; height: 15px; transition: opacity .25s, transform .4s; }
-.switch-thumb .snowflake { color: #3f8fc9; }
-.switch-thumb .flame { opacity: 0; transform: scale(.3) rotate(-90deg); transform-origin: 50% 80%; }
-.switch-thumb .flame path:first-child { fill: #e2562b; }
-.switch-thumb .flame path:last-child { fill: #ffc24a; }
-
-.switch-row:hover:not(:disabled) .switch-thumb { transform: translateX(2px); }
-.switch-row[aria-checked="true"] .switch-track {
-  background: linear-gradient(120deg, #ff8a1f, #d9480f 55%, #c81e1e);
-  box-shadow: inset 0 2px 5px rgba(120, 20, 0, .4), 0 0 12px rgba(255, 98, 0, .5);
-}
-.switch-row[aria-checked="true"] .switch-thumb { transform: translateX(28px); background: linear-gradient(160deg, #fffbe9, #ffe9b5); }
-.switch-row[aria-checked="true"]:hover .switch-thumb { transform: translateX(26px); }
-.switch-row[aria-checked="true"] .switch-thumb .snowflake { opacity: 0; transform: rotate(180deg) scale(.3); }
-.switch-row[aria-checked="true"] .switch-thumb .flame { opacity: 1; transform: none; animation: flame-flicker .9s ease-in-out .4s infinite alternate; }
-.switch-row:disabled { opacity: .5; cursor: default; }
-@media (prefers-reduced-motion: reduce) {
-  .switch-row, .switch-track, .switch-thumb, .switch-thumb svg { transition: none; }
-  .switch-row[aria-checked="true"] .switch-thumb .flame { animation: none; }
-}
+/* #endregion */

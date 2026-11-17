@@ -8,6 +8,7 @@
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+  <!-- Header: title, falling snow, mountain silhouette and the clock (filled by app.js) -->
   <header class="site-header">
     <div class="snow" aria-hidden="true"></div>
     <svg class="peaks" viewBox="0 0 1200 120" preserveAspectRatio="none" aria-hidden="true">
@@ -23,18 +24,20 @@
 
   <main class="layout">
     <aside class="sidebar">
+      <!-- "Resort of the day" and "Next opening" cards -->
       <section class="panel highlights" id="highlights" aria-label="Highlights"></section>
 
+      <!-- Filters: lift type, season status, valley -->
       <section class="panel">
         <h2>Lift type</h2>
         <div class="chips" id="type-chips" role="group" aria-label="Filter by lift type"></div>
         <h2 class="gap">Season status</h2>
         <div class="chips" id="status-chips" role="group" aria-label="Filter by season status"></div>
-        <button type="button" id="today-filter" class="switch-row" role="switch" aria-checked="false"></button>
         <h2 class="gap"><label for="valley-select">Valley</label></h2>
         <select id="valley-select"></select>
       </section>
 
+      <!-- Home address for driving distances, the day plan and directions -->
       <section class="panel">
         <h2><label for="home-input">Distance from home</label></h2>
         <form id="home-form" class="home-form">
@@ -45,24 +48,28 @@
         <p id="home-status" class="status" role="status" aria-live="polite"></p>
       </section>
 
+      <!-- Search and the resort list -->
       <section class="panel list-panel">
         <div class="list-head">
           <h2><label for="search-input">Resorts</label></h2>
           <span id="list-count" class="count"></span>
         </div>
         <div class="search-wrap">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.800-3.800"/></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.8-3.8"/></svg>
           <input id="search-input" type="search" placeholder="Search resorts by name…" autocomplete="off">
         </div>
         <ul id="resort-list" class="resort-list"></ul>
       </section>
     </aside>
 
+    <!-- OpenStreetMap map with a pin per resort -->
     <div id="map" class="map" aria-label="Map of ski resorts"></div>
   </main>
 
+  <!-- Welcome screen, shown once per day: today's openings or the next one -->
   <dialog id="welcome" class="welcome" aria-labelledby="welcome-title">
     <div class="welcome-hero">
+      <!-- Animated scene: sunset sky, rising sun, mountains and two gondolas on a cable -->
       <svg id="welcome-scene" viewBox="0 0 660 250" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
         <defs>
           <linearGradient id="w-sky" x1="0" y1="0" x2="0" y2="1">
@@ -86,17 +93,20 @@
         <path d="M215 80l-28 28 20-6 10 14 12-16 18 10Z M505 130l-22 19 16-4 8 10 9-11 13 6Z" fill="#fff" opacity=".9"/>
         <path d="M0 250v-45l90-40 80 35 100-55 90 50 90-40 100 45 110-50v100Z" fill="#f4f9fd"/>
         <path d="M0 250v-22l120-18 140 14 150-20 130 16 120-14v44Z" fill="#fff"/>
+        <!-- Cable and tower -->
         <path d="M-20 178 680 62" stroke="#0b2444" stroke-width="2.5" fill="none"/>
         <path d="M330 120v86" stroke="#0b2444" stroke-width="5" stroke-linecap="round"/>
         <path d="M318 122h24" stroke="#0b2444" stroke-width="5" stroke-linecap="round"/>
+        <!-- Red gondola -->
         <g>
-          <animateMotion path="M-60 184.600 L720 55.400" dur="11s" repeatCount="indefinite"/>
+          <animateMotion path="M-60 184.6 L720 55.4" dur="11s" repeatCount="indefinite"/>
           <path d="M0 0v16" stroke="#0b2444" stroke-width="3"/>
           <rect x="-19" y="16" width="38" height="28" rx="9" fill="#e23b3b" stroke="#fff" stroke-width="2"/>
           <path d="M-13 23h11v9h-11z M2 23h11v9H2z" fill="#cfe8fb"/>
         </g>
+        <!-- Yellow gondola, half a lap behind -->
         <g>
-          <animateMotion path="M-60 184.600 L720 55.400" dur="11s" begin="-5.500s" repeatCount="indefinite"/>
+          <animateMotion path="M-60 184.6 L720 55.4" dur="11s" begin="-5.5s" repeatCount="indefinite"/>
           <path d="M0 0v16" stroke="#0b2444" stroke-width="3"/>
           <rect x="-19" y="16" width="38" height="28" rx="9" fill="#ffb21f" stroke="#fff" stroke-width="2"/>
           <path d="M-13 23h11v9h-11z M2 23h11v9H2z" fill="#cfe8fb"/>
@@ -116,6 +126,7 @@
     </div>
   </dialog>
 
+  <!-- Leaflet map library, resort data, then the app -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="resorts.js"></script>
   <script src="app.js"></script>
